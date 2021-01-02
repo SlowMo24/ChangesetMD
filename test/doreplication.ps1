@@ -10,10 +10,11 @@ $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 Write-host "==================== < changesetMD    ===================="
 Write-host
 
-psql -h localhost -p 7513 -U osm -c "CREATE DATABASE IF NOT EXISTS changesetMD WITH  OWNER = osm"
+createdb -h localhost -p 7513 -U osm "changesetMD"
+psql -h localhost -p 7513 -U postgres -d changesetMD -c "CREATE EXTENSION IF NOT EXISTS postgis"
+psql -h localhost -p 7513 -U postgres -d changesetMD -c "CREATE EXTENSION IF NOT EXISTS hstore"
 psql -h localhost -p 7513 -U osm -d changesetMD -c "CREATE SCHEMA IF NOT EXISTS test_doreplication"
-
-python changesetMD.py -H localhost -P 7513 -u osm -d changesetMD --schema=test_doreplication --create --geometry
+python ../changesetMD.py -H localhost -P 7513 -u osm -d changesetMD --schema=test_doreplication --create --geometry
 
 <#t
 o test replication, we suggest you look at file https://planet.openstreetmap.org/replication/changesets/state.yaml for sequence value. 
