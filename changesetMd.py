@@ -9,10 +9,12 @@ from OpenStreetmap into a postgres database for querying.
 
 from __future__ import print_function
 
+import sys
 import argparse
 import gzip
 from datetime import datetime
 from datetime import timedelta
+import time
 import psycopg2
 import psycopg2.extras
 import queries
@@ -447,7 +449,7 @@ if __name__ == '__main__':
         msg="{0} Records inserted ({1} recs / seond), Processing time is {2}".format(md.parsedCount, recsSecond, timeCost)
     else: msg="Processing time cost is {0}".format(timeCost,)
     print(msg)
-    if (args.Logfile): logging.info(msgCost)
+    if (args.Logfile): logging.info(msg)
 
     print('All done. Enjoy your (meta)data!')
     if (args.Logfile): logging.info("All done. Enjoy your (meta)data!")
