@@ -15,11 +15,9 @@ Write-host
 
 # note if restrictions to create on your Database, assure that the Admin creates / gives access authorisation
 
+# comment the following two lines after the Database, schema and tables are created
 createdb -h localhost -p 7513 -U osm "changesetMD"
-psql -h localhost -p 7513 -U postgres -d changesetMD -c "CREATE EXTENSION IF NOT EXISTS postgis"
-psql -h localhost -p 7513 -U postgres -d changesetMD -c "CREATE EXTENSION IF NOT EXISTS hstore"
-psql -h localhost -p 7513 -U osm      -d changesetMD -c "CREATE SCHEMA IF NOT EXISTS test_dopartial"
-python ../changesetMD.py -H localhost -P 7513 -u osm -d changesetMD --schema=test_dopartial --create --geometry
+python changesetMD.py -H localhost -P 7513 -u osm -d changesetMD --schema=t_dopartial --create --geometry
 
 <#
 test Partial replication
@@ -31,7 +29,7 @@ Example: sequences from 4263076 to 4263126
 The bulkrows Â«throttleÂ» parameter is for Bulk rows insert / commit to reduce acess to the PostgreSQL Db. Data is kep in Arrays. Check for any impact on the memory used by the application.
 #>
 
-python changesetMD.py -H localhost -P 7513 -u osm -d changesetMD --schema=test_dopartial --replicate --geometry --bulkrows=1000 --fromseq=4263076 --toseq=4263126
+python changesetMD.py -H localhost -P 7513 -u osm -d changesetMD --schema=t_dopartial --replicate --geometry --bulkrows=1000 --fromseq=4263076 --toseq=4263166
 
 Write-host
 Write-host "====================   changesetMD /> ===================="
