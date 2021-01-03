@@ -71,6 +71,8 @@ Now you are ready to start consuming the replication diffs with the following co
 
     python changesetmd.py -d <database> [-s <schema>] [-b <bulkrows>]  -r
 
+See [Windows Powershell Test script](test/doreplication.ps1)
+
 Run this command as often as you wish to keep your database up to date with OSM. You can put it in a cron job that runs every minute if you like. The first run may take a few minutes to catch up but each subsequent run should only take a few seconds to finish.
 
 Partial Replication
@@ -82,6 +84,8 @@ For Partial Replication, you manually control everything. In such case, the Part
 Once this Partial replication is done, you could update manually the ```osm_changeset_state``` table to document the last sequence and timestamp inserted in this schema and then Replicate from this point. For example, we could continue the Replicate for a weekly project to follow from this point.
 
     python changesetmd.py -d <database> [-s <schema>] [-b <bulkrows>]  -r
+
+See [Windows Powershell Test script](test/dopartialreplication.ps1)
 
 Logging
 ------------
