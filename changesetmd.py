@@ -11,7 +11,6 @@ from __future__ import print_function
 import sys
 import argparse
 import gzip
-import bz2file
 from datetime import datetime
 from datetime import timedelta
 import time
@@ -23,6 +22,11 @@ import yaml
 import logging
 from lxml import etree
 
+try:
+    from bz2file import BZ2File
+    bz2Support = True
+except ImportError:
+    bz2Support = False
 
 # Block of changesets - nb to commit
 DEFAULT_BULK_COPY_SIZE = 100000
@@ -215,6 +219,7 @@ class ChangesetMD():
                 self.insertNewBatchComment(connection, comments )
                 self.report_progress(currentSequence, currentTimestamp)
                 # empty arrays after Bulk Db insert
+                connection.commit()
                 changesets = []
                 comments = []
 
