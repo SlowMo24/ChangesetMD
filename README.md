@@ -33,13 +33,13 @@ While for production, you dont want to have many versions of this huge database,
 
 Execution
 ------------
-The first time you run it, you will need to include the -c | --create option to create the table. By default, the public schema will be used, unless you include -s | --schema. See [Windows Powershell createtables Test script](test/test1_createtables.ps1)
+The first time you run it, you will need to include the -c | --create option to create the table. By default, the public schema will be used, unless you include -s | --schema. See [Test1 createtables script](test/test1_createtables.ps1) (Windows Powershell)
 
     python changesetmd.py -d <database> -c [-s <schema>] (public schema by defautl)
 
 The create function can be combined with the file option to immediately parse a file.
 
-To parse a dump file, use the -f | --file option. By default, the public schema is used in the database. The -b | --bulkrows «throttle» option (default value is 50000), let's specify the size of the commit (ie. simultaneous number of lines inserted / committed to the database). This reduces write access to the database. See [Windows Powershell parsefile Test script](test/test2_parsefile.ps1 )
+To parse a dump file, use the -f | --file option. By default, the public schema is used in the database. The -b | --bulkrows «throttle» option (default value is 50000), let's specify the size of the commit (ie. simultaneous number of lines inserted / committed to the database). This reduces write access to the database. See [Test2 parsefile script](test/test2_parsefile.ps1 ) (Windows Powershell)
 
     python changesetmd.py -d <database> [-s <schema>] [-b <bulkrows>] -f /tmp/changeset-latest.osm
 
@@ -71,7 +71,7 @@ Now you are ready to start consuming the replication diffs with the following co
 
     python changesetmd.py -d <database> [-s <schema>] [-b <bulkrows>]  -r
 
-See [Windows Powershell doReplication Test script](test/test3_doreplication.ps1)
+See [Test3 doReplication script](test/test3_doreplication.ps1) (Windows Powershell)
 
 Run this command as often as you wish to keep your database up to date with OSM. You can put it in a cron job that runs every minute if you like. The first run may take a few minutes to catch up but each subsequent run should only take a few seconds to finish.
 
@@ -85,7 +85,8 @@ Once this Partial replication is done, you could update manually the ```osm_chan
 
     python changesetmd.py -d <database> [-s <schema>] [-b <bulkrows>]  -r
 
-See [Windows Powershell do Partial Replication Test script](test/test4_dopartialreplication.ps1)
+See [Test4 do Partial Replication script](test/test4_dopartialreplication.ps1) (Windows Powershell)
+
 
 Logging
 ------------
@@ -93,27 +94,25 @@ Status message are printed every <bulkrows> records. By default, these messages 
     
 The log shows the Db Insert Rate (Records per second) for each <bulkrow>. This will vary a lot based on your computer (laptop to server), type of disk and tuning of your PostgreSQL database. The log below for January 1 2021 is from a laptop. We see that the number of sequences (file read un the Planet server) and time-cost for each bulkrow vary significatively.   
 
-
 |Log example - Partial Replication for 2021-01-01|
 | --------------------------------------------------------------------------------------------------------------------------------------------------- | 
-|2021-01-03 11:03:37  ========== doPartialReplication New ========== |
-|2021-01-03 11:03:37  doPartialReplication try|
-|2021-01-03 11:03:37|
-|2021-01-03 11:03:37  Commencing Partial Planet replication (https://planet.openstreetmap.org/replication/changesets/) to PostgreSQL Db|
-|2021-01-03 11:03:37|  From seq=4260811  to seq=4262246|
+|2021-01-07 22:36:46     doPartialReplication New |  
+|2021-01-07 22:36:46  doPartialReplication try|
+|2021-01-07 22:36:46  Partial replication (https://planet.openstreetmap.org/replication/changesets/) to PostgreSQL Db|
+|2021-01-07 22:36:46  From seq=4260811  to seq=4262246|
 
-|2021-01-03 11:03:37|  Last Db Sequence| Db Insert Rate Recs / sec.|Changeset Metadata Recs in Batch|      Cum Recs| Last Db (UTC)|
+|2021-01-07 22:36:46|  Last Db Sequence| Db Insert Rate Recs / sec.|Changeset Metadata Recs in Batch|      Cum Recs| Last Db (UTC)|
 | ----------------------- | -----------: | -----------: | -----------: | -----------: | ----------------------- |
-|2021-01-03 11:03:37|4,260,811|
-|2021-01-03 11:07:51|4,261,391|         39.62|        10,044|        10,044|   2021-01-01 09:44:00 |
-|2021-01-03 11:09:55|4,261,629|         80.63|        10,004|        20,048|   2021-01-01 13:42:00 |
-|2021-01-03 11:11:13|4,261,798|        128.82|        10,049|        30,097|   2021-01-01 16:30:59 |
-|2021-01-03 11:13:15|4,262,067|         82.46|        10,027|        40,124|   2021-01-01 20:59:54 |
-|2021-01-03 11:14:34|finished with Partial replication| as requested||||
-|2021-01-03 11:14:34|Time-Cost HH:MM:SS|||||
-|2021-01-03 11:14:34|0:10:56.15|           68.29|        44,806|||
-|2021-01-03 11:14:34|doPartialReplication End|||||
-|doReplication,|returnStatus 0||||
+|2021-01-07&nbsp;22:36:46| 4,260,811|||||
+|2021-01-07 22:40:41| 4,261,391| 42.75|10,044|10,044  |2021-01-01&nbsp;09:44:00|
+|2021-01-07 22:42:22| 4,261,629| 98.46|10,004|20,048  |2021-01-01 13:42:00|
+|2021-01-07 22:43:36| 4,261,798|135.73|10,049|30,097  |2021-01-01 16:30:59|
+|2021-01-07 22:45:31| 4,262,067| 87.34|10,027|40,124  |2021-01-01 20:59:54|
+|2021-01-07 22:46:46| 4,262,247| 62.88| 4,682|44,806  |2021-01-01 23:58:57|
+|2021-01-07 22:46:46| finished with Partial replication as requested |||||
+|2021-01-07 22:46:46|  Time-Cost HH:MM:SS|||||
+|2021-01-07 22:46:46|  0:09:59.86 |  74.69 |   44,806|||
+|2021-01-07 22:46:46|   doPartialReplication End|||||
 
 Notes
 ------------
