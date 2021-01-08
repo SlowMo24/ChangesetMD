@@ -321,6 +321,7 @@ class ChangesetMD():
                         currentSequence += 1
 
                 # Process rows not yet inserted / committed
+                currentSequence -= 1
                 cursor.execute("update {0}.osm_changeset_state set last_sequence={1}, last_timestamp='{2}'".format(self.schema, currentSequence, currentTimestamp))
                 connection.commit()
                 self.report_progress(currentSequence, currentTimestamp)
@@ -390,6 +391,7 @@ class ChangesetMD():
                         self.report_progress(currentSequence, currentTimestamp)
                         self.changesetsToProcess=0
                     currentSequence += 1
+            currentSequence -= 1
             # Process rows not yet inserted / committed
             connection.commit()
             self.report_progress(currentSequence, currentTimestamp)
