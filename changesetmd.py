@@ -25,7 +25,7 @@ from lxml import etree
 
 
 # Block of changesets - nb to commit
-DEFAULT_BULK_COPY_SIZE = 50
+DEFAULT_BULK_COPY_SIZE = 100000
 BASE_REPL_URL = "https://planet.openstreetmap.org/replication/changesets/"
 
 class ChangesetMD():
