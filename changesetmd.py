@@ -55,7 +55,7 @@ class ChangesetMD():
         self.changesetsToProcess = 0
         self.beginTime = datetime.now()
         self.endTime = None
-
+  
     def msg_Report(self, msg):
         print("{0}  {1}".format(time.strftime('%Y-%m-%d %H:%M:%S'), msg))
         if (self.isLogging): logging.info(msg)
@@ -222,6 +222,10 @@ class ChangesetMD():
                 connection.commit()
                 changesets = []
                 comments = []
+            #clear everything we don't need from memory to avoid leaking
+            elem.clear()
+            while elem.getprevious() is not None:
+                del elem.getparent()[0]
 
         self.parsedCount += self.parsedFileCount
         # uncomment next 2 lines to report each sequence wget in the log
@@ -233,15 +237,11 @@ class ChangesetMD():
         self.insertNewBatchComment(connection, comments)
         changesets = []
         comments = []
-        # commit Large files - if isReplicate==False
+        # EOF commit Large files - if isReplicate==False
         if (isReplicate==False):
             connection.commit()
             self.report_progress(currentSequence, currentTimestamp)
             self.report_bottom()
-        #clear everything we don't need from memory to avoid leaking
-        elem.clear()
-        while elem.getprevious() is not None:
-            del elem.getparent()[0]
         return currentTimestamp, changesets, comments
 
     def fetchReplicationFile(self, sequenceNumber):
@@ -497,6 +497,7 @@ if __name__ == '__main__':
             print ("ParseFile")
             (currentTimestamp, changesets, comments)=md.parseFile(connection, 0, changesetFile, False, changesets, comments)
             print("parseFile completed")
+            changesetFile.clear()
         else:
             md.msg_Report('ERROR: no changeset file opened. Something went wrong in processing args')
             sys.exist(1)
