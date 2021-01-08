@@ -108,7 +108,7 @@ The log shows the Db Insert Rate (Records per second) for each <bulkrow>. This w
 |2021-01-07 22:42:22| 4,261,629| 98.46|10,004|20,048  |2021-01-01 13:42:00|
 |2021-01-07 22:43:36| 4,261,798|135.73|10,049|30,097  |2021-01-01 16:30:59|
 |2021-01-07 22:45:31| 4,262,067| 87.34|10,027|40,124  |2021-01-01 20:59:54|
-|2021-01-07 22:46:46| 4,262,247| 62.88| 4,682|44,806  |2021-01-01 23:58:57|
+|2021-01-07 22:46:46| 4,262,246| 62.88| 4,682|44,806  |2021-01-01 23:58:57|
 |2021-01-07 22:46:46| finished with Partial replication as requested |||||
 |2021-01-07 22:46:46|  Time-Cost HH:MM:SS|||||
 |2021-01-07 22:46:46|  0:09:59.86 |  74.69 |   44,806|||
@@ -171,7 +171,6 @@ Find all changesets that were created in Liberty Island:
 License
 ------------
 Copyright (C) 2012  Toby Murray
-              2019  Martijn Vexel
               2021  Pierre Béland
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
