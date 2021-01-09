@@ -39,7 +39,7 @@ The first time you run it, you will need to include the -c | --create option to 
 
 The create function can be combined with the file option to immediately parse a file.
 
-To parse a dump file, use the -f | --file option. By default, the public schema is used in the database. The -b | --bulkrows «throttle» option (default value is 50000), let's specify the size of the commit (ie. simultaneous number of lines inserted / committed to the database). This reduces write access to the database. See [Test2 parsefile script](test/test2_parsefile.ps1 ) (Windows Powershell)
+To parse a dump file, use the -f | --file option. By default, the public schema is used in the database. The -b | --bulkrows «throttle» option (default value is 100000), let's specify the size of the commit (ie. simultaneous number of lines inserted / committed to the database). This reduces write access to the database. See [Test2 parsefile script](test/test2_parsefile.ps1 ) (Windows Powershell)
 
     python changesetmd.py -d <database> [-s <schema>] [-b <bulkrows>] -f /tmp/changeset-latest.osm
 
@@ -50,6 +50,8 @@ You can add the `-g` | `--geometry` option to build polygon geometries (the data
 Replication
 ------------
 After you have parsed a weekly dump file into the database, the database can be kept up to date using changeset diff files that are generated on the OpenStreetMap planet server every minute. To initiate the replication system you will need to find out which minutely sequence number you need to start with and update the ```osm_changeset_state``` table so that ChangesetMD knows where to start. Unfortunately there isn't an easy way to get the needed sequence number from the dump file. Here is the process to find it:
+
+The Weekly dump file contains all changesets metadata from 2004 (some 100 million records, 4Gb, early 2021). It is available from [http://planet.osm.org/](http://planet.osm.org/) and some Replication sites across the world.
 
 First, determine the timestamp present in the first line of XML in the dump file. Assuming you are starting from the .bzip2 file, use this command:
 
@@ -90,9 +92,9 @@ See [Test4 do Partial Replication script](test/test4_dopartialreplication.ps1) (
 
 Logging
 ------------
-Status message are printed every <bulkrows> records. By default, these messages are also saved in the file ChangesetMD_log.log. To Stop logging, we need to add to instuctions ```----logfile=False```
+Status messages are printed every after each Batch ```bulkrow``` is inserted / committed in the Db.  Adding the option ```----logfile``` will append messages to the file ChangesetMD_YYYY-MM-DD.log.
     
-The log shows the Db Insert Rate (Records per second) for each <bulkrow>. This will vary a lot based on your computer (laptop to server), type of disk and tuning of your PostgreSQL database. The log below for January 1 2021 is from a laptop. We see that the number of sequences (file read un the Planet server) and time-cost for each bulkrow vary significatively.   
+The log shows the Db Insert Rate (Records per second) for each ```bulkrow```. This will vary a lot based on your computer (laptop or server), type of disk and tuning of your PostgreSQL database. The replication log below for January 7 2021 is from a laptop. We see that the number of sequences (files downloaded from the Planet server) and time-cost for each bulkrow vary significatively.   Comparatively, when parsing a planet/changesets-latest.osm.bz2 already saved on disk (no internet download and no constraint and indexes), Db Insert rate increases to around 3,000  Recs/sec. 
 
 |Log example - Partial Replication for 2021-01-01|
 | --------------------------------------------------------------------------------------------------------------------------------------------------- | 
@@ -116,7 +118,7 @@ The log shows the Db Insert Rate (Records per second) for each <bulkrow>. This w
 
 Notes
 ------------
-- Takes 2-3 hours to import the current dump on a decent home computer.
+- Takes 2-3 hours to import the current dump on a decent home computer, up to 8 hours on a laptop.
 - Might be faster to process the XML into a flat file and then use the postgres COPY command to do a bulk load but this would make incremental updates a little harder
 - Fields indexed have commonly be queried . Depending on what you want to do, you may need more indexes.
 - Changesets can be huge in extent, so you may wish to filter them by area before any visualization. 225 square km seems to be a fairly decent threshold to get the actual spatial footprint of edits. `WHERE ST_Area(ST_Transform(geom, 3410)) < 225000000` will do the trick.
