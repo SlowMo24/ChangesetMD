@@ -21,7 +21,9 @@ Write-host " "
 
 Write-host -ForegroundColor cyan "Truncate tables (Fast row delete) and remove constraint and indexes"
 Write-host -ForegroundColor cyan "Parse large bz2 file  (Insert without indexes)"
-#python  -u -X utf8 changesetMD.py -H localhost -P 7513 -u osm -d changesetmd_test --schema=testfile --trunc --geometry --bulkrows=500000 --logfile --file=test/changesets-2016-06-04-10-52.osm.bz2
-python  -u -X utf8 changesetMD.py -H localhost -P 7513 -u osm -d changesetmd_test --schema=testfile --trunc --geometry --bulkrows=500 --logfile --file=test/changesets_testfile.osm
+python  -u -X utf8 changesetMD.py -H localhost -P 5432 -u osm -d changesetmd_test --schema=testfile --trunc --geometry --bulkrows=500 --logfile --file=test/changesets_testfile.osm
+# instructions to Parse latest bz2 file located in planet subdirectory
+#python  -u -X utf8 changesetMD.py -H localhost -P 5432 -u osm -d changesetmd_test --schema=testfile --trunc --geometry --bulkrows=500000 --logfile --file=planet/changesets-latest.osm.bz2
+
 Write-host " "
 Write-host "====================   changesetMD /> ===================="
