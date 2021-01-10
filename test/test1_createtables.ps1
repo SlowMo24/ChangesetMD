@@ -26,7 +26,7 @@ $error.clear()
 try   {createdb -h localhost -p 5432 -U osm "changesetmd_test"}
 catch {Write-host -BackgroundColor white -ForegroundColor red " Create database error occured: " $_.Exception.Message }
 
-python changesetMD.py -H localhost -P 5432 -u osm -d changesetmd_test --schema=testfile --create --geometry
+python -u -X utf8 changesetMD.py -H localhost -P 5432 -u osm -d changesetmd_test --schema=testfile --create --geometry
 
 Write-host
 Write-host "====================   changesetMD /> ===================="
