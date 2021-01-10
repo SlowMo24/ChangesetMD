@@ -26,7 +26,7 @@ Write-host -ForegroundColor cyan "Update osm_changeset_state with sequence from 
 psql -h localhost -p 5432 -U osm -d changesetmd_test -c "update testfile.osm_changeset_state set update_in_progress = 0,  last_sequence = '4270770', last_timestamp = '2021-01-07 23:00:00'"
 
 # running the following line, if log error «Relation do not exist» might indicate that the postgres user do not have right to access the tables - if such case arize, you must consult your Db administrator
-python changesetMD.py -H 'localhost' -P 5432 -u 'osm' --database='changesetmd_test' --schema=testfile --replicate --geometry --bulkrows=200
+python -u -X utf8 changesetMD.py -H 'localhost' -P 5432 -u 'osm' --database='changesetmd_test' --schema=testfile --replicate --geometry --bulkrows=200
 
 
 Write-host
