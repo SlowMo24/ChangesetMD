@@ -23,7 +23,7 @@ psql -h localhost -p 5432 -U osm -d changesetmd_test -c "delete from testfile.os
 psql -h localhost -p 5432 -U osm -d changesetmd_test -c "delete from testfile.osm_changeset_comment;"
 
 Write-host -ForegroundColor cyan "Partial Replication "
-python -u -X utf8 changesetMD.py -H 'localhost' -P 5432 -u 'osm' --database='changesetmd_test' --schema=testfile --replicate --geometry --bulkrows=500 --fromseq=4260811 --toseq=4261001
+python -u -X utf8 changesetmd.py -H 'localhost' -P 5432 -u 'osm' --database='changesetmd_test' --schema=testfile --replicate --geometry --bulkrows=500 --fromseq=4260811 --toseq=4261001
 
 Write-host
 Write-host "====================   changesetMD /> ===================="
