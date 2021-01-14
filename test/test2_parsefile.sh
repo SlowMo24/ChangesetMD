@@ -5,7 +5,7 @@ changesetMD - Test2 - Parse file
 Replicates  Planet Changesets in the postgreSQL database from the last sequence inserted.
 The python option [-u] reduces memory usage as it forces the stdout and stderr streams to be unbuffered 
 
-Windows Powershell script
+Linux SH script
 @author Pierre Béland 2021
 '
 clear
@@ -13,7 +13,7 @@ clear
 # directory where the changesetMD python modules are stored
 cd ".."
 echo "==================== < changesetMD    ===================="
-echo "--- test2_parsefile.ps1                           ---"
+echo "--- test2_parsefile.sh                                 ---"
 
 echo "Prior to test, Drops schema if exists already"
 psql -h localhost -p 5432 -U osm  -d changesetmd_test -c "drop schema if exists testfile cascade"
