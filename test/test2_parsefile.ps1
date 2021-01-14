@@ -1,9 +1,8 @@
 <# 
 changesetMD - Test2 - Parse file
 
-This Test script documents the various steps  to Parse an OSM Replication file in the database.
-To reduce memory consumption and delays with Powershell, we use 
-python option [-u]. This force the stdout and stderr streams to be unbuffered 
+Parses XML OSM Changeset metadata Replication file in the postgreSQL database.
+The python option [-u] reduces memory usage as it forces the stdout and stderr streams to be unbuffered 
 
 Windows Powershell script
 @author Pierre Béland 2021
@@ -12,18 +11,23 @@ clear
 $OutputEncoding = [Console]::OutputEncoding = [Text.UTF8Encoding]::UTF8
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 
-# specify directory where you stored the changesetMD python modules
-Set-Location "D:\OsmContributorStats\changesetMD_p3\github"
-
+#
+# directory where the changesetMD python modules are stored
+cd ..
 Write-host "==================== < changesetMD    ===================="
 Write-host -BackgroundColor white -ForegroundColor blue " test2_parsefile.ps1                                "
 Write-host " "
 
-Write-host -ForegroundColor cyan "Truncate tables (Fast row delete) and remove constraint and indexes"
+Write-host -ForegroundColor cyan "Prior to test, Drops schema if exists already"
+psql -h localhost -p 5432 -U osm -d changesetmd_test -c "drop schema if exists testfile cascade"
+
 Write-host -ForegroundColor cyan "Parse large bz2 file  (Insert without indexes)"
 python  -u -X utf8 changesetMD.py -H localhost -P 5432 -u osm -d changesetmd_test --schema=testfile --trunc --geometry --bulkrows=500 --logfile --file=test/changesets_testfile.osm
-# instructions to Parse latest bz2 file located in planet subdirectory
+# instruction to Parse latest bz2 file located in planet subdirectory
 #python  -u -X utf8 changesetMD.py -H localhost -P 5432 -u osm -d changesetmd_test --schema=testfile --trunc --geometry --bulkrows=500000 --logfile --file=planet/changesets-latest.osm.bz2
 
 Write-host " "
+Write-host -ForegroundColor cyan "Constraint and indexes added)"
 Write-host "====================   changesetMD /> ===================="
+#back to test directory
+cd test
