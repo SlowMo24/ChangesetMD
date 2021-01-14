@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*
 '''
 ChangesetMD is a simple XML parser to read the weekly changeset metadata dumps
 from OpenStreetmap into a postgres database for querying.
@@ -46,8 +47,8 @@ class ChangesetMD():
             self.search_path=str(schema)+", public, postgis"
         self.createGeometry = createGeometry
         if (bulkrows is None):
-            self.bulkrowst = DEFAULT_BULK_COPY_SIZE
-        else: self.bulkrowst = int(bulkrows)
+            self.bulkrows = DEFAULT_BULK_COPY_SIZE
+        else: self.bulkrows = int(bulkrows)
         self.isLogging=Logfile
         self.currentTimestamp=datetime.now()
         self.BatchstartTime=datetime.now()
@@ -212,9 +213,9 @@ class ChangesetMD():
                  elem.attrib.get('open', None), elem.attrib.get('num_changes', None), elem.attrib.get('user', None), tags))
             if len(elem.attrib['created_at'])>0: currentTimestamp=datetime.strptime(elem.attrib['created_at'], '%Y-%m-%dT%H:%M:%SZ')
             else: currentTimestamp=0
-            if(self.changesetsToProcess>=self.bulkrowst and isReplicate==False):
+            if(self.changesetsToProcess>=self.bulkrows and isReplicate==False):
                 # Bulkrows insert/commit for large files (isReplicate==False)
-                self.parsedCount+=self.bulkrowst
+                self.parsedCount+=self.bulkrows
                 self.insertNewBatch(connection, changesets, isReplicate)
                 self.insertNewBatchComment(connection, comments )
                 self.report_progress(currentSequence, currentTimestamp)
@@ -318,7 +319,7 @@ class ChangesetMD():
                     while((currentSequence <= lastServerSequence)):
                         (currentTimestamp, changesets, comments)=self.parseFile(connection, currentSequence, self.fetchReplicationFile(currentSequence), True, changesets, comments)
                         # commit if doReplication==False or  Lines to process > bulkrows
-                        if(self.changesetsToProcess>=self.bulkrowst):
+                        if(self.changesetsToProcess>=self.bulkrows):
                             cursor.execute("update {0}.osm_changeset_state set last_sequence={1}, last_timestamp='{2}'".format(self.schema, currentSequence, currentTimestamp))
                             connection.commit()
                             self.report_progress(currentSequence, currentTimestamp)
@@ -390,7 +391,7 @@ class ChangesetMD():
                 while((currentSequence <= lastServerSequence)):
                     (currentTimestamp, changesets, comments)=self.parseFile(connection, currentSequence, self.fetchReplicationFile(currentSequence), True, changesets, comments)
                     # commit if doReplication==False or  BulkRowsInsert > bulkrows
-                    if(self.changesetsToProcess>=self.bulkrowst):
+                    if(self.changesetsToProcess>=self.bulkrows):
                         cursor.execute("update {0}.osm_changeset_state set last_sequence={1}, last_timestamp='{2}'".format(self.schema, currentSequence, currentTimestamp))
                         connection.commit()
                         self.report_progress(currentSequence, currentTimestamp)
@@ -437,7 +438,7 @@ if __name__ == '__main__':
     argParser.add_argument('-F', '--fromseq', type=int, action='store', dest='FromSeq', help='FromSeq, To request Partial Replication (must be integer)', required=False)
     argParser.add_argument('-T', '--toseq', type=int, action='store', dest='ToSeq', help='FromSeq, To request Partial Replication (must be integer > fromseq)', required=False)
     argParser.add_argument('-g', '--geometry', action='store_true', dest='createGeometry', default=False, help='Build geometry of changesets (requires postgis)')
-    argParser.add_argument('-L', '--logfile', action='store_true', dest='Logfile', default=True, help='Messages written to Logfile')
+    argParser.add_argument('-L', '--logfile', action='store_true', dest='Logfile', default=False, help='Log Messages written to Logfile')
 
     args = argParser.parse_args()
 
@@ -450,16 +451,20 @@ if __name__ == '__main__':
 
     md = ChangesetMD(createGeometry=args.createGeometry, schema=args.schema, bulkrows=args.bulkrows, Logfile=args.Logfile)
 
-    print (md.schema)
+    print ("Db Schema", md.schema)
 
     if (args.Logfile):
         logging.info("---------- New ChangesetMD      ----------")
 
-    if args.truncateTables:
-        md.truncateTables(connection)
-
     if args.createTables:
         md.createTables(connection)
+        if (args.doReplication):
+            cursor = connection.cursor()
+            md.msg_Report('creating constraints')
+            cursor.execute(queries.createConstraints.format(md.schema,))
+
+    if args.truncateTables:
+        md.truncateTables(connection)
         print("create complété")
 
     if(args.doReplication):
@@ -481,7 +486,7 @@ if __name__ == '__main__':
             changesetFile = gzip.open(args.fileName, 'rb')
         else:
             if(args.fileName[-4:] == '.bz2'):
-                print ("bz2BZ2File({0})".format(args.fileName))
+                print ("BZ2File({0})".format(args.fileName))
                 if(bz2Support):
                     changesetFile = BZ2File(args.fileName)
                 else:
@@ -504,15 +509,17 @@ if __name__ == '__main__':
 
     if args.createTables:
         cursor = connection.cursor()
-        md.msg_Report('creating constraints')
-        cursor.execute(queries.createConstraints.format(md.schema,))
+        if not (args.doReplication):
+            md.msg_Report('creating constraints')
+            cursor.execute(queries.createConstraints.format(md.schema,))
         md.msg_Report('creating indexes')
         cursor.execute(queries.createIndexes.format(md.schema,))
         if args.createGeometry:
             md.msg_Report('creating Geomindex')
             cursor.execute(queries.createGeomIndex.format(md.schema,))
         connection.commit()
-        connection.close()
+  
+    connection.close()
 
     endTime = datetime.now()
     timeCost = endTime - beginTime
