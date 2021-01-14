@@ -33,13 +33,13 @@ While for production, you dont want to have many versions of this huge database,
 
 Execution
 ------------
-The first time you run it, you will need to include the -c | --create option to create the table. By default, the public schema will be used, unless you include -s | --schema. See [Test1 createtables script](test/test1_createtables.ps1) (Windows Powershell)
-
+The first time you run it, you will need to include the -c | --create option to create the table. By default, the public schema will be used, unless you include -s | --schema. See the Test1 createtables script ( [Linux SH](test/test1_createtables.sh) , [Windows Powershell](test/test1_createtables.ps1) )
     python changesetmd.py -d <database> -c [-s <schema>] (public schema by defautl)
 
 The create function can be combined with the file option to immediately parse a file.
 
-To parse a dump file, use the -f | --file option. By default, the public schema is used in the database. The -b | --bulkrows «throttle» option (default value is 100000), let's specify the size of the commit (ie. simultaneous number of lines inserted / committed to the database). This reduces write access to the database. See [Test2 parsefile script](test/test2_parsefile.ps1 ) (Windows Powershell)
+To parse a dump file, use the -f | --file option. By default, the public schema is used in the database. The -b | --bulkrows «throttle» option (default value is 100000), let's specify the size of the commit (ie. simultaneous number of lines inserted / committed to the database). This reduces write access to the database. 
+See the Test2 parsefile script ( [Linux SH](test/test2_parsefile.sh) , [Windows Powershell](test/test2_parsefile.ps1) )
 
     python changesetmd.py -d <database> [-s <schema>] [-b <bulkrows>] -f /tmp/changeset-latest.osm
 
@@ -73,7 +73,7 @@ Now you are ready to start consuming the replication diffs with the following co
 
     python changesetmd.py -d <database> [-s <schema>] [-b <bulkrows>]  -r
 
-See [Test3 doReplication script](test/test3_doreplication.ps1) (Windows Powershell)
+See the Test3 doReplication script ( [Linux SH](test/test3_doreplication.sh) , [Windows Powershell](test/test3_doreplication.ps1) )
 
 Run this command as often as you wish to keep your database up to date with OSM. You can put it in a cron job that runs every minute if you like. The first run may take a few minutes to catch up but each subsequent run should only take a few seconds to finish.
 
@@ -87,8 +87,7 @@ Once this Partial replication is done, you could update manually the ```osm_chan
 
     python changesetmd.py -d <database> [-s <schema>] [-b <bulkrows>]  -r
 
-See [Test4 do Partial Replication script](test/test4_dopartialreplication.ps1) (Windows Powershell)
-
+See the Test4 do Partial Replication script ( [Linux SH](test/test4_dopartialreplication.sh) , [Windows Powershell](test/test4_dopartialreplication.ps1) )
 
 Logging
 ------------
