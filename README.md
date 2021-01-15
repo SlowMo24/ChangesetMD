@@ -10,7 +10,7 @@ Setup
 
 ChangesetMD works with python 2.7 and Python 3.5.
 
-Aside from postgresql, ChangesetMD depends on the python libraries psycopg2 and lxml.
+Aside from postgresql (9.5+), ChangesetMD depends on the python libraries psycopg2 and lxml.
 On Debian-based systems this means installing the python-psycopg2 and python-lxml packages.
 
 If you are using `pip` and `virtualenv`, you can install all dependencies with `pip install -r requirements.txt`.
@@ -34,6 +34,7 @@ While for production, you dont want to have many versions of this huge database,
 Execution
 ------------
 The first time you run it, you will need to include the -c | --create option to create the table. By default, the public schema will be used, unless you include -s | --schema. See the Test1 createtables script ( [Linux SH](test/test1_createtables.sh) , [Windows Powershell](test/test1_createtables.ps1) )
+
     python changesetmd.py -d <database> -c [-s <schema>] (public schema by defautl)
 
 The create function can be combined with the file option to immediately parse a file.
@@ -43,13 +44,15 @@ See the Test2 parsefile script ( [Linux SH](test/test2_parsefile.sh) , [Windows 
 
     python changesetmd.py -d <database> [-s <schema>] [-b <bulkrows>] -f /tmp/changeset-latest.osm
 
-If no other arguments are given, it will access postgres using the default settings of the postgres client, typically connecting on the unix socket as the current OS user. Use the ```--help``` argument to see optional arguments for connecting to postgres.
+If no other arguments are given on linux os, it will access postgres using the default settings of the postgres client, typically connecting on the unix socket as the current OS user. Use the ```--help``` argument to see optional arguments for connecting to postgres.
 
 You can add the `-g` | `--geometry` option to build polygon geometries (the database also needs to be created with this option).
 
 Replication
 ------------
-After you have parsed a weekly dump file into the database, the database can be kept up to date using changeset diff files that are generated on the OpenStreetMap planet server every minute. To initiate the replication system you will need to find out which minutely sequence number you need to start with and update the ```osm_changeset_state``` table so that ChangesetMD knows where to start. Unfortunately there isn't an easy way to get the needed sequence number from the dump file. Here is the process to find it:
+After you have parsed a weekly dump file into the database, the database can be kept up to date using changeset diff files that are generated on the OpenStreetMap planet server every minute. This is also possible after you used Partial Replication. If you dont need all the history from 2004, you could for example start from january 1 2021 and replicate from the last sequence you already processed.
+
+To initiate the replication system you will need to find out which minutely sequence number you need to start with and update the ```osm_changeset_state``` table so that ChangesetMD knows where to start. Unfortunately there isn't an easy way to get the needed sequence number from the dump file. Here is the process to find it:
 
 The Weekly dump file contains all changesets metadata from 2004 (some 100 million records, 4Gb, early 2021). It is available from [http://planet.osm.org/](http://planet.osm.org/) and some Replication sites across the world.
 
@@ -79,7 +82,7 @@ Run this command as often as you wish to keep your database up to date with OSM.
 
 Partial Replication
 ------------
-For Partial Replication, you manually control everything. In such case, the Partial Replication function dont synchronize (read and write) with the ```osm_changeset_state``` table. It is up to you to control the Changeset sequences. First, you need to consult  [http://planet.osm.org/replication/changesets](http://planet.osm.org/replication/changesets/) to determine the FromSeq and ToSeq of your Partial Replication request. For example, FromSeq= and ToSeq= will extract changesets for January 1 2001 (utc time). These two sequences are added to the instructions to specify Partial Replication.
+For Partial Replication, you manually control everything. In such case, the Partial Replication function dont synchronize (read and write) with the ```osm_changeset_state``` table. It is up to you to control the Changeset sequences. First, you need to consult  [http://planet.osm.org/replication/changesets](http://planet.osm.org/replication/changesets/) to determine the FromSeq and ToSeq of your Partial Replication request. For example, FromSeq=4260811 and ToSeq=4262246 will extract changeset metadatas for January 1 2001 (utc time). These two sequences are added to the instructions to specify Partial Replication.
 
     python changesetmd.py -d <database> [-s <schema>] [-b <bulkrows>]  -r -F --fromseq=4260811 --toseq=4262246
 
@@ -91,7 +94,7 @@ See the Test4 do Partial Replication script ( [Linux SH](test/test4_dopartialrep
 
 Logging
 ------------
-Status messages are printed every after each Batch ```bulkrow``` is inserted / committed in the Db.  Adding the option ```----logfile``` will append messages to the file ChangesetMD_YYYY-MM-DD.log.
+Status messages are printed every after each Batch ```bulkrow``` is inserted / committed in the Db.  Adding the option ```----logfile``` will append messages to the file ChangesetMD_YYYY-MM-DD.log. Note that it is safe to start from the last sequence reported in the log since the report is printed after insert / commit of the block of lines.
     
 The log shows the Db Insert Rate (Records per second) for each ```bulkrow```. This will vary a lot based on your computer (laptop or server), type of disk and tuning of your PostgreSQL database. The replication log below for January 7 2021 is from a laptop. We see that the number of sequences (files downloaded from the Planet server) and time-cost for each bulkrow vary significatively.   Comparatively, when parsing a planet/changesets-latest.osm.bz2 already saved on disk (no internet download and no constraint and indexes), Db Insert rate increases to around 3,000  Recs/sec. 
 
