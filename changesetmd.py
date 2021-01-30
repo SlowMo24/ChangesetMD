@@ -35,7 +35,7 @@ BASE_REPL_URL = "https://planet.openstreetmap.org/replication/changesets/"
 
 class ChangesetMD():
 
-    logging.basicConfig(level=logging.INFO, filename="ChangesetMD_"+datetime.now().strftime('%Y-%m-%d')+".log", filemode="a+",
+    logging.basicConfig(level=logging.INFO, filename="changesetmd_"+datetime.now().strftime('%Y-%m-%d')+".log", filemode="a+",
                         format="%(asctime)-15s %(levelname)-8s %(message)s")
 
     def __init__(self, createGeometry, dbName="", dbUser="", dbHost="", dbPort="", dbPass=None, schema="public", bulkrows=DEFAULT_BULK_COPY_SIZE, Logfile=True):
@@ -215,7 +215,7 @@ class ChangesetMD():
             else: currentTimestamp=0
             if(self.changesetsToProcess>=self.bulkrows and isReplicate==False):
                 # Bulkrows insert/commit for large files (isReplicate==False)
-                self.parsedCount+=self.bulkrows
+                self.parsedCount+=self.changesetsToProcess
                 self.insertNewBatch(connection, changesets, isReplicate)
                 self.insertNewBatchComment(connection, comments )
                 self.report_progress(currentSequence, currentTimestamp)
@@ -228,7 +228,7 @@ class ChangesetMD():
             while elem.getprevious() is not None:
                 del elem.getparent()[0]
 
-        self.parsedCount += self.parsedFileCount
+        self.parsedCount += self.changesetsToProcess
         # uncomment next 2 lines to report each sequence wget in the log
         #msg="{0:12,}  {1:12,}  {2}      ( +{3:6}  Wait-list: {4} )".format(currentSequence, self.parsedCount,  currentTimestamp.strftime('%Y-%m-%d %H:%M:%S'), self.parsedFileCount,  self.changesetsToProcess)
         #if (self.isLogging): logging.info(msg)
@@ -433,6 +433,7 @@ if __name__ == '__main__':
     argParser.add_argument('-d', '--database', action='store', dest='dbName', help='Target database', required=True)
     argParser.add_argument('-s', '--schema', action='store', dest='schema', help='Target schema (default=public)', required=False)
     argParser.add_argument('-b', '--bulkrows', type=int, action='store', dest='bulkrows', default=50000, help='Batch processing - Nb of records processed / commited (default=50000)', required=False)
+    argParser.add_argument('-B', '--bz2buffer', type=int, action='store', dest='bz2buffer', default=None, help='BZ2 Large file read buffer size (default=None)', required=False)
     argParser.add_argument('-f', '--file', action='store', dest='fileName', help='OSM changeset file to parse')
     argParser.add_argument('-r', '--replicate', action='store_true', dest='doReplication', default=False, help='Apply a replication file to an existing database / schema')
     argParser.add_argument('-F', '--fromseq', type=int, action='store', dest='FromSeq', help='FromSeq, To request Partial Replication (must be integer)', required=False)
@@ -465,7 +466,7 @@ if __name__ == '__main__':
 
     if args.truncateTables:
         md.truncateTables(connection)
-        print("create complété")
+								  
 
     if(args.doReplication):
         if (args.FromSeq == None and args.ToSeq == None):
@@ -475,34 +476,38 @@ if __name__ == '__main__':
         sys.exit(returnStatus)
 
     if not (args.fileName is None):
-        print("filename", args.fileName)
+										
         if args.createGeometry:
             md.msg_Report('parsing changeset file with geometries: {0}'.format(args.fileName))
         else:
             md.msg_Report('parsing changeset file:{0}'.format(args.fileName))
         changesetFile = None
         if(args.doReplication):
-            print ("gzip Files")
+								
             changesetFile = gzip.open(args.fileName, 'rb')
         else:
             if(args.fileName[-4:] == '.bz2'):
-                print ("BZ2File({0})".format(args.fileName))
+																																			 
                 if(bz2Support):
-                    changesetFile = BZ2File(args.fileName)
+                    if (args.bz2buffer):
+                        changesetFile = BZ2File(args.fileName,'rb',args.bz2buffer)
+                        md.msg_Report('bz2 file buffer : {0}'.format(args.bz2buffer))
+                    else:
+                        changesetFile = BZ2File(args.fileName)
                 else:
                     md.msg_Report('ERROR: bzip2 support not available. Unzip file first or install bz2file')
                     sys.exit(1)
             else:
-                print ("File other {0})".format(args.fileName))
+																												
                 changesetFile = open(args.fileName, 'rb')
 
         if(changesetFile != None):
             changesets=[]
             comments=[]
-            print ("ParseFile")
+            md.msg_Report("ParseFile")
             (currentTimestamp, changesets, comments)=md.parseFile(connection, 0, changesetFile, False, changesets, comments)
-            print("parseFile completed")
-            changesetFile.clear()
+            md.msg_Report("parseFile completed")
+								 
         else:
             md.msg_Report('ERROR: no changeset file opened. Something went wrong in processing args')
             sys.exist(1)
