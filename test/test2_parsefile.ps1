@@ -24,7 +24,7 @@ psql -h localhost -p 5432 -U osm -d changesetmd_test -c "drop schema if exists t
 Write-host -ForegroundColor cyan "Parse large bz2 file  (Insert without indexes)"
 python  -u -X utf8 changesetmd.py -H localhost -P 5432 -u osm -d changesetmd_test --schema=testfile --trunc --geometry --bulkrows=500 --logfile --file=test/changesets_testfile.osm
 # instruction to Parse latest bz2 file located in planet subdirectory
-#python  -u -X utf8 changesetmd.py -H localhost -P 5432 -u osm -d changesetmd_test --schema=testfile --trunc --geometry --bulkrows=500000 --logfile --file=planet/changesets-latest.osm.bz2
+#python  -u -X utf8 changesetmd.py -H localhost -P 5432 -u osm -d changesetmd_test --schema=testfile --trunc --geometry --bulkrows=500000 --bz2buffer=500000 --logfile --file=planet/changesets-latest.osm.bz2
 
 Write-host " "
 Write-host -ForegroundColor cyan "Constraint and indexes added)"
