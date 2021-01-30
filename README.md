@@ -43,9 +43,10 @@ The first time you run it, you will need to include the -c | --create option to 
 
 The create function can be combined with the file option to immediately parse a file.
 
-To parse a dump file, use the -f | --file option. By default, the public schema is used in the database. The -b | --bulkrows «throttle» option (default value is 100000), let's specify the size of the commit (ie. simultaneous number of lines inserted / committed to the database). This reduces write access to the database. 
+To parse a dump file, use the -f | --file option. By default, the public schema is used in the database. The -b | --bulkrows «throttle» option (default value is 100000), let's specify the size of the commit (ie. simultaneous number of lines inserted / committed to the database). This reduces write access to the database. For computers with less memory, it is possible to add the -B | --bz2buffer option to control the memory read buffer size parsing the changesets-latest.osm.bz2 file.
 
     python changesetmd.py -d <database> [-s <schema>] [-b <bulkrows>] -f /tmp/changeset-latest.osm
+    python changesetmd.py -d <database> [-s <schema>] [-b <bulkrows>] [-B <bz2buffer>] -f /tmp/changeset-latest.osm.bz2
 
 > Script test2_parsefile : [Linux](test/test2_parsefile.sh) , [Windows](test/test2_parsefile.ps1)
 
