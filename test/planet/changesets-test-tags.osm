@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="replicate_changesets.rb" copyright="OpenStreetMap and contributors" attribution="https://www.openstreetmap.org/copyright" license="https://opendatacommons.org/licenses/odbl/1-0/">
+<changeset id="2000" created_at="2006-01-26T01:23:30Z" closed_at="2006-01-26T03:19:55Z" open="false" user="LA2" uid="229" min_lat="58.4069356" min_lon="15.5864985" max_lat="58.4188714" max_lon="15.6195092" num_changes="123" comments_count="0"/>
+<changeset id="30000" created_at="2008-08-01T23:14:47Z" closed_at="2008-08-02T00:50:14Z" open="false" user="sweetheart_johny" uid="52931" min_lat="46.9970692" min_lon="28.8209323" max_lat="47.0005522" max_lon="28.8273610" num_changes="64" comments_count="0"/>
+<changeset id="5000341" created_at="2010-06-16T12:47:25Z" closed_at="2010-06-16T13:47:25Z" open="false" user="Simon Josefsson" uid="116894" min_lat="59.1937694" min_lon="17.7672667" max_lat="59.1940214" max_lon="17.7673458" num_changes="1" comments_count="0">
+  <tag k="comment" v="bugfix, osminspector self-intersecting road"/>
+  <tag k="created_by" v="Potlatch 1.4 (save sv)"/>
+</changeset>
+<changeset id="15610060" created_at="2013-04-04T16:39:12Z" closed_at="2013-04-04T17:39:13Z" open="false" num_changes="21" user="Toliman" uid="204045" min_lat="51.6732511" max_lat="51.6794607" min_lon="6.9843532" max_lon="6.9989682" comments_count="2">
+    <tag k="created_by" v="Potlatch 2"/>
+    <tag k="version" v="2.3"/>
+    <tag k="build" v="2.3-554-ge648197"/>
+    <discussion>
+      <comment uid="7228700" user="Reinhard12" date="2021-01-02T19:13:57Z">
+        <text>Hallo Toliman,
+in diesem CS hast du Objekte erfasst, die jetzt nicht mehr existieren, z. B. die Station 215450985 wo jetzt die Fa, Rexin ist. 
+Kann das gelöscht werden, oder gibt es (wie bei den Eisenbahnfreunden) Interesse an der Historie?
+Gruß Reinhard</text>
+      </comment>
+      <comment uid="204045" user="Toliman" date="2021-01-05T14:56:24Z">
+        <text>So lange ein Objekt noch auf irgendwelchen weit gebräuchlichen Satellitenbildern zu sehen ist, sollte man es nicht löschen, sondern mit "abandoned:" versehen, um Neuanlagen zu verhindern. Objekte für die ein Wikipedia-Artikel existiert, sollten grundsätzlich nicht gelöscht werden, sondern mit "abandoned:" gekennzeichnet werden, weil hier ein "grösseres kulturelles Interesse" besteht.</text>
+      </comment>
+    </discussion>
+</changeset>
+<changeset id="96660555" created_at="2020-12-30T10:46:50Z" closed_at="2020-12-30T10:46:52Z" open="false" user="vbbukka" uid="10159579" min_lat="41.4005551" min_lon="-85.1931550" max_lat="41.4095620" max_lon="-85.1463639" num_changes="5" comments_count="0">
+  <tag k="changesets_count" v="20237"/>
+  <tag k="comment" v="Modified residential road"/>
+  <tag k="created_by" v="iD 2.18.5-dev"/>
+  <tag k="host" v="https://ideditor.amazon.com"/>
+  <tag k="imagery_used" v="EsriWorldImageryClarity;US-TIGER-Roads-2019;Bing Streetside;Mapillary Images;Mapillary Map Features;Mapillary Signs;OpenStreetCam Images"/>
+  <tag k="locale" v="en-US"/>
+</changeset>
+<changeset id="96988503" created_at="2021-01-05T14:58:29Z" closed_at="2021-01-05T14:58:29Z" open="false" num_changes="23" user="projecter63" uid="251726" min_lat="53.5546771" max_lat="53.6071552" min_lon="10.3161849" max_lon="10.4473306" comments_count="0">
+    <tag k="source" v="knowledge, Esri aerial images "/>
+    <tag k="locale" v="de-DE"/>
+    <tag k="imagery_used" v="Esri World Imagery (Clarity) Beta"/>
+    <tag k="created_by" v="Vespucci 14.0.10.0"/>
+    <tag k="comment" v="Germany, SH, Stormarn; Trittauer Mühlenbach am Zufluss zur Bille ergänzt"/>
+  </changeset>
+  <changeset id="96985357" created_at="2021-01-05T14:03:06Z" closed_at="2021-01-05T14:23:08Z" open="false" num_changes="2" user="hamspam123" uid="12437433" min_lat="51.9026478" max_lat="51.9044627" min_lon="0.8902693" max_lon="0.8933345" comments_count="1">
+    <tag k="source" v="survey"/>
+    <tag k="StreetComplete:quest_type" v="AddRoadSurface"/>
+    <tag k="locale" v="en-US"/>
+    <tag k="created_by" v="StreetComplete 28.1"/>
+    <tag k="comment" v="Add road surface info"/>
+    <discussion>
+      <comment uid="322785" user="BCNorwich" date="2021-01-05T15:00:28Z">
+        <text>Hi, Welcome to OpenStreetMap.
+
+It looks like the data you added you then deleted or removed in some way. Do you need any help, please just ask?
+
+Regards Bernard.</text>
+      </comment>
+    </discussion>
+  </changeset>
+  <changeset id="96832586" created_at="2021-01-03T02:33:37Z" closed_at="2021-01-03T02:33:40Z" open="false" num_changes="2" user="Mirosław Żylewicz" uid="1946262" min_lat="51.1788576" max_lat="51.1795304" min_lon="16.9987931" max_lon="16.9992263" comments_count="4">
+    <tag k="source" v="http://jdhome.pl"/>
+    <tag k="changesets_count" v="7546"/>
+    <tag k="imagery_used" v="Geoportal 2: Orthophotomap (aerial image)"/>
+    <tag k="locale" v="pl"/>
+    <tag k="host" v="https://www.openstreetmap.org/edit"/>
+    <tag k="created_by" v="iD 2.19.5"/>
+    <tag k="comment" v="Poprawienie numeru budynku."/>
+    <discussion>
+      <comment uid="3476229" user="maro21" date="2021-01-03T14:45:42Z">
+        <text>Czy na tabliczkach na tych budynkach naprawdę jest 45a i 45b? Bo urząd miejski nie rejestruje takich adresów: https://geoportal.wroclaw.pl/poi/u/59/ul.Waniliowa</text>
+      </comment>
+      <comment uid="1946262" user="Mirosław Żylewicz" date="2021-01-03T22:10:37Z">
+        <text>Budynki nie posiadają jeszcze tabliczek. Nie mniej jednak na stronie dewelopera możemy przeczytać: "Dwupokojowe mieszkania już od 220 000 zł - Ul. Waniliowa 45, 51-180 Wrocław". Mieszkania sprzedawane są z podziałem na budynek "A" i "B". Planu budynku z podziałem na mieszkania znajdziesz na stronie: http://jdhome.pl</text>
+      </comment>
+      <comment uid="3476229" user="maro21" date="2021-01-04T20:19:08Z">
+        <text>No tak, ale ta strona i oznaczenia A i B powstały przed lub w trakcie tej budowy, a adresy zostały przydzielone w listopadzie 2020. Nigdzie też nie widzę adresu na tej stronie "Waniliowa 45a" lub "Waniliowa 45b". Jeśli nie mają tabliczek, to adresy które dodałem są poprawne. A jeśli na numer domu na tabliczce jest inny niż w danych urzędowych (rzadko się zdarza) to wtedy pierwszeństwo ma ten na tabliczce, ale trzeba napisać o takiej rozbieżności w tagu note.</text>
+      </comment>
+      <comment uid="1946262" user="Mirosław Żylewicz" date="2021-01-05T15:01:32Z">
+        <text>Za tydzień mam odbiór mieszkania w jednym z budynków. Na miejscu zapytam kierownika budowy jaki jest oficjalny numer budynku. W dokumentach sprzedaży widnieje "Waniliowa 45".</text>
+      </comment>
+    </discussion>
+  </changeset>
+</osm>
