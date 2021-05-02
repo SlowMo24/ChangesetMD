@@ -831,9 +831,9 @@ def parseSample(connection, bulkrows, bz2buffer, filename):
     msg_Report("Begin Parse/Prepare data for {0} bulkrows".format(bulkrows,))
     cursor = connection.cursor()
     #method 1 - toebee
-    #context = iter(etree.iterparse(changesetFile))
+    context = iter(etree.iterparse(changesetFile))
     #method 2 - + events is faster
-    context = iter(etree.iterparse(changesetFile, events=("start", "end")))
+    #context = iter(etree.iterparse(changesetFile, events=("start", "end")))
     #action, root = next(context)
     changesets=[]
     comments=[]
