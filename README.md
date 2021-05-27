@@ -35,9 +35,9 @@ For the various steps below, test files (Linux SH and Windows Powershell) are pr
 
 Execution
 ------------
-The first time you run it, you will need to include the -c | --create option to create the table. By default, the public schema will be used, unless you include -s | --schema. 
+The first time you run it, you will need to include the -c | --create option to create the table. To use the "public" schema speficy `-s public` below.
 
-    python changesetmd.py -d <database> -c [-s <schema>] (public schema by defautl)
+    python changesetmd.py -d <database> -c [-s <schema>] (schema "none" by default)
 
 > Script test1_createtables : [Linux](test/test1_createtables.sh) , [Windows](test/test1_createtables.ps1)
 
