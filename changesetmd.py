@@ -182,6 +182,7 @@ class ChangesetMD():
         cursor = connection.cursor()
         context = etree.iterparse(changesetFile)
         action, root = next(context)
+        currentTimestamp = datetime.strptime('2004-01-01T00:00:00Z', '%Y-%m-%dT%H:%M:%SZ')
         for action, elem in context:
             if(elem.tag != 'changeset'):
                 continue
@@ -212,7 +213,6 @@ class ChangesetMD():
                  elem.attrib.get('max_lat', None), elem.attrib.get('min_lon', None),  elem.attrib.get('max_lon', None), elem.attrib.get('closed_at', None),
                  elem.attrib.get('open', None), elem.attrib.get('num_changes', None), elem.attrib.get('user', None), tags))
             if len(elem.attrib['created_at'])>0: currentTimestamp=datetime.strptime(elem.attrib['created_at'], '%Y-%m-%dT%H:%M:%SZ')
-            else: currentTimestamp=0
             if(self.changesetsToProcess>=self.bulkrows and isReplicate==False):
                 # Bulkrows insert/commit for large files (isReplicate==False)
                 self.parsedCount+=self.changesetsToProcess
