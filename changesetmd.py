@@ -299,7 +299,7 @@ class ChangesetMD():
             lastServerTimestamp = serverState['last_run']
             if (self.isLogging): logging.info("last timestamp on server: " + str(lastServerTimestamp))
         except Exception as e:
-            self.msg_Report("error retrieving server state file. Bailing on replication\n", e)
+            self.msg_Report("error retrieving server state file. Bailing on replication\n")
             returnStatus = 2
         else:
             try:
