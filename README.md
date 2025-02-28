@@ -24,7 +24,6 @@ bzip files.
 Two ```postgis``` extensions need to be [installed](http://postgis.net/install) in your PostgreSQL database:
 
 - ```geometry``` for building geometries,
-- ```hstore``` for hstore variables.
 
 ChangesetMD expects a postgres database to be set up for it. It can likely co-exist within another database if desired.
 Otherwise, As the postgres user execute:
@@ -213,9 +212,6 @@ All comments made on changesets via the new commenting system
 - `comment_user_id`: numeric OSM user ID
 - `comment_user_name`: OSM username
 - `comment_date`: timestamp of when the comment was created
-
-If you are unfamiliar with hstore and how to query it, see
-the [postgres documentation](http://www.postgresql.org/docs/9.2/static/hstore.html)
 
 Example queries
 ------------

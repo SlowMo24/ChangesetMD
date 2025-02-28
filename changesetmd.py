@@ -36,6 +36,11 @@ try:
 except ImportError:
     bz2Support = False
 
+from psycopg2.extras import Json
+from psycopg2.extensions import register_adapter
+
+register_adapter(dict, Json)
+
 # Block of changesets - nb to commit
 DEFAULT_BULK_COPY_SIZE = 100000
 BASE_REPL_URL = "https://planet.openstreetmap.org/replication/changesets/"
