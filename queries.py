@@ -1,9 +1,9 @@
-'''
+"""
 Just a utility file to store some SQL queries for easy reference
 
 @author: Toby Murray
-'''
 createChangesetTable = '''CREATE EXTENSION IF NOT EXISTS hstore;
+"""
   CREATE TABLE IF NOT EXISTS {0}.osm_changeset (
   id bigint,
   user_id bigint,
@@ -32,10 +32,10 @@ CREATE TABLE IF NOT EXISTS {0}.osm_changeset_state (
 );
 '''
 
-initStateTable = '''INSERT INTO {0}.osm_changeset_state VALUES (-1, null, 0)''';
+initStateTable = '''INSERT INTO {0}.osm_changeset_state VALUES (-1, null, 0);'''
 
 dropIndexes = '''ALTER TABLE {0}.osm_changeset DROP CONSTRAINT IF EXISTS {0}_osm_changeset_pkey CASCADE;
-DROP INDEX IF EXISTS {0}_user_name_idx, {0}_user_id_idx, {0}_created_idx, {0}_tags_idx, {0}_changeset_geom_gist ;
+DROP INDEX IF EXISTS {0}_user_name_idx, {0}_user_id_idx, {0}_created_idx, {0}_tags_idx, {0}_changeset_geom_gist;
 '''
 
 createConstraints = '''ALTER TABLE {0}.osm_changeset ADD CONSTRAINT {0}_osm_changeset_pkey PRIMARY KEY(id);'''
