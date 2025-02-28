@@ -48,6 +48,7 @@ class ChangesetMD:
 
     def __init__(self, create_geometry, schema="public", bulkrows=DEFAULT_BULK_COPY_SIZE, logfile=True,
                  contributors: List = None):
+        self.parsedFileCount = 0
         if schema == "public":
             self.schema = "public"
             self.search_path = "public, postgis"
@@ -88,7 +89,7 @@ class ChangesetMD:
         self.msg_report("Time-Cost HH:MM:SS")
         self.msg_report("{0:16}  {1:>8}  {2:12,}".format(str(time_cost)[:10], recs_second, self.parsedCount))
 
-    def report_progress(self, current_sequence, current_timestamp):
+    def report_progress(self, current_sequence: int, current_timestamp: datetime):
         time_cost, recs_second = self.calc_timecost(self.BatchstartTime, datetime.now(), self.changesetsToProcess)
         self.msg_report("{0:12,}    {1:>10}  {2:12,}  {3:12,}{4:10}{5:>19}    ".format(current_sequence, recs_second,
                                                                                        self.changesetsToProcess,
@@ -118,43 +119,43 @@ class ChangesetMD:
                 self.schema, ))
         db_connection.commit()
 
-    def createTables(self, connection):
-        cursor = connection.cursor()
+    def create_tables(self, db_connection):
+        local_cursor = db_connection.cursor()
         self.msg_report("--- createTables, schema = {0} ---".format(self.schema, ))
         sql = "create schema if not exists {0};".format(self.schema, )
         self.msg_report(sql)
         try:
-            cursor.execute(sql)
+            local_cursor.execute(sql)
         except psycopg2.OperationalError as err:
             self.msg_report("error {0}\n{1}".format(sql, err))
             return 1
         try:
-            cursor.execute(queries.createChangesetTable.format(self.schema, ))
+            local_cursor.execute(queries.createChangesetTable.format(self.schema, ))
         except psycopg2.OperationalError as err:
             self.msg_report("error queries.createChangesetTable {0}".format(err, ))
             return 1
         self.msg_report("queries.initStateTable")
         try:
-            cursor.execute(queries.initStateTable.format(self.schema, ))
+            local_cursor.execute(queries.initStateTable.format(self.schema, ))
         except psycopg2.OperationalError as err:
             self.msg_report("error queries.createChangesetTable {0}".format(err, ))
             return 1
-        connection.commit()
+        db_connection.commit()
 
         if self.createGeometry:
             self.msg_report("queries.createGeometryColumn")
             try:
                 # modify column if exists, requires postgresql 9.6+
-                cursor.execute(queries.createGeometryColumn.format(self.schema, ))
-            except psycopg2.errors.DuplicateColumn as errdup:
-                self.msg_report("Create geometry duplicate error : var geom already exist", errdup)
+                local_cursor.execute(queries.createGeometryColumn.format(self.schema, ))
+            except psycopg2.errors.DuplicateColumn:
+                self.msg_report("Create geometry duplicate error : var geom already exist")
                 return 1
-            connection.commit()
+            db_connection.commit()
 
-    def insertNewBatch(self, connection, data_arr, isReplicate):
-        cursor = connection.cursor()
+    def insert_new_batch(self, db_connection, data_arr, is_replicate: bool):
+        local_cursor = db_connection.cursor()
         if self.createGeometry:
-            if (isReplicate):
+            if is_replicate:
                 sql = '''INSERT into {0}.osm_changeset AS t1
                     (id, user_id, created_at, min_lat, max_lat, min_lon, max_lon, closed_at, open, num_changes, user_name, tags, geom)
                     values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,ST_MakeValid(ST_MakeEnvelope(%s,%s,%s,%s,4326)))
@@ -167,7 +168,7 @@ class ChangesetMD:
                     values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,ST_MakeValid(ST_MakeEnvelope(%s,%s,%s,%s,4326)))'''.format(
                     self.schema, )
         else:
-            if (isReplicate):
+            if is_replicate:
                 sql = '''INSERT into {0}.osm_changeset AS t1
                     (id, user_id, created_at, min_lat, max_lat, min_lon, max_lon, closed_at, open, num_changes, user_name, tags)
                     values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
@@ -178,34 +179,32 @@ class ChangesetMD:
                 sql = '''INSERT into {0}.osm_changeset
                     (id, user_id, created_at, min_lat, max_lat, min_lon, max_lon, closed_at, open, num_changes, user_name, tags)
                     values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'''.format(self.schema, )
-        psycopg2.extras.execute_batch(cursor, sql, data_arr)
-        cursor.close()
+        psycopg2.extras.execute_batch(local_cursor, sql, data_arr)
+        local_cursor.close()
 
-    def insertNewBatchComment(self, connection, data_arr):
-        cursor = connection.cursor()
+    def insert_new_batch_comment(self, db_connection, data_arr):
+        local_cursor = db_connection.cursor()
         sql = '''INSERT into {0}.osm_changeset_comment
                     (comment_changeset_id, comment_user_id, comment_user_name, comment_date, comment_text)
                     values (%s,%s,%s,%s,%s)'''.format(self.schema, )
-        psycopg2.extras.execute_batch(cursor, sql, data_arr)
-        cursor.close()
+        psycopg2.extras.execute_batch(local_cursor, sql, data_arr)
+        local_cursor.close()
 
-    def deleteExisting(self, connection, id):
-        cursor = connection.cursor()
-        cursor.execute('''DELETE FROM {0}.osm_changeset_comment
-                          WHERE comment_changeset_id = {1}'''.format(self.schema, id, ))
+    def delete_existing(self, db_connection, changeset_id):
+        local_cursor = db_connection.cursor()
+        local_cursor.execute('''DELETE FROM {0}.osm_changeset_comment
+                          WHERE comment_changeset_id = {1}'''.format(self.schema, changeset_id, ))
 
-    def parseFile(self, connection, currentSequence, changesetFile, isReplicate, changesets, comments):
-        self.parsedFileCount = 0
-        if not (isReplicate):
+    def parse_file(self, db_connection, current_sequence, changeset_file, is_replicate, changeset_list, comment_list):
+        if not is_replicate:
             self.parsedCount = 0
             self.changesetsToProcess = 0
             self.report_header()
-        cursor = connection.cursor()
-        context = etree.iterparse(changesetFile)
-        action, root = next(context)
-        currentTimestamp = datetime.strptime('2004-01-01T00:00:00Z', '%Y-%m-%dT%H:%M:%SZ')
+        context = etree.iterparse(changeset_file)
+        _, _ = next(context)
+        current_timestamp = datetime.strptime('2004-01-01T00:00:00Z', '%Y-%m-%dT%H:%M:%SZ')
         for action, elem in context:
-            if (elem.tag != 'changeset'):
+            if elem.tag != 'changeset':
                 continue
 
             if self.contributors and elem.attrib.get('uid') not in self.contributors:  # != '1822133':
@@ -222,44 +221,45 @@ class ChangesetMD:
 
             for discussion in elem.iterchildren(tag='discussion'):
                 for commentElement in discussion.iterchildren(tag='comment'):
+                    text = None
                     for text in commentElement.iterchildren(tag='text'):
                         text = text.text
                     comment = (elem.attrib['id'], commentElement.attrib.get('uid'), commentElement.attrib.get('user'),
                                commentElement.attrib.get('date'), text)
-                    comments.append(comment)
+                    comment_list.append(comment)
 
-            if (isReplicate):
-                self.deleteExisting(connection, elem.attrib['id'])
+            if is_replicate:
+                self.delete_existing(db_connection, elem.attrib['id'])
 
             if self.createGeometry:
-                changesets.append((elem.attrib['id'], elem.attrib.get('uid', None), elem.attrib['created_at'],
-                                   elem.attrib.get('min_lat', None),
-                                   elem.attrib.get('max_lat', None), elem.attrib.get('min_lon', None),
-                                   elem.attrib.get('max_lon', None), elem.attrib.get('closed_at', None),
-                                   elem.attrib.get('open', None), elem.attrib.get('num_changes', None),
-                                   elem.attrib.get('user', None), tags, elem.attrib.get('min_lon', None),
-                                   elem.attrib.get('min_lat', None),
-                                   elem.attrib.get('max_lon', None), elem.attrib.get('max_lat', None)))
+                changeset_list.append((elem.attrib['id'], elem.attrib.get('uid', None), elem.attrib['created_at'],
+                                       elem.attrib.get('min_lat', None),
+                                       elem.attrib.get('max_lat', None), elem.attrib.get('min_lon', None),
+                                       elem.attrib.get('max_lon', None), elem.attrib.get('closed_at', None),
+                                       elem.attrib.get('open', None), elem.attrib.get('num_changes', None),
+                                       elem.attrib.get('user', None), tags, elem.attrib.get('min_lon', None),
+                                       elem.attrib.get('min_lat', None),
+                                       elem.attrib.get('max_lon', None), elem.attrib.get('max_lat', None)))
             else:
-                changesets.append((elem.attrib['id'], elem.attrib.get('uid', None), elem.attrib['created_at'],
-                                   elem.attrib.get('min_lat', None),
-                                   elem.attrib.get('max_lat', None), elem.attrib.get('min_lon', None),
-                                   elem.attrib.get('max_lon', None), elem.attrib.get('closed_at', None),
-                                   elem.attrib.get('open', None), elem.attrib.get('num_changes', None),
-                                   elem.attrib.get('user', None), tags))
-            if len(elem.attrib['created_at']) > 0: currentTimestamp = datetime.strptime(elem.attrib['created_at'],
-                                                                                        '%Y-%m-%dT%H:%M:%SZ')
-            if (self.changesetsToProcess >= self.bulkrows and isReplicate == False):
+                changeset_list.append((elem.attrib['id'], elem.attrib.get('uid', None), elem.attrib['created_at'],
+                                       elem.attrib.get('min_lat', None),
+                                       elem.attrib.get('max_lat', None), elem.attrib.get('min_lon', None),
+                                       elem.attrib.get('max_lon', None), elem.attrib.get('closed_at', None),
+                                       elem.attrib.get('open', None), elem.attrib.get('num_changes', None),
+                                       elem.attrib.get('user', None), tags))
+            if len(elem.attrib['created_at']) > 0: current_timestamp = datetime.strptime(elem.attrib['created_at'],
+                                                                                         '%Y-%m-%dT%H:%M:%SZ')
+            if self.changesetsToProcess >= self.bulkrows and is_replicate == False:
                 # Bulkrows insert/commit for large files (isReplicate==False)
                 self.parsedCount += self.changesetsToProcess
-                self.insertNewBatch(connection, changesets, isReplicate)
-                self.insertNewBatchComment(connection, comments)
+                self.insert_new_batch(db_connection, changeset_list, is_replicate)
+                self.insert_new_batch_comment(db_connection, comment_list)
                 # update current timestamp in table and use it for filtering on failed run
-                self.report_progress(currentSequence, currentTimestamp)
+                self.report_progress(current_sequence, current_timestamp)
                 # empty arrays after Bulk Db insert
-                connection.commit()
-                changesets = []
-                comments = []
+                db_connection.commit()
+                changeset_list = []
+                comment_list = []
             # clear everything we don't need from memory to avoid leaking
             elem.clear()
             while elem.getprevious() is not None:
@@ -271,86 +271,86 @@ class ChangesetMD:
         # if (self.isLogging): logging.info(msg)
 
         # Update whatever is left and empty arrays
-        self.insertNewBatch(connection, changesets, isReplicate)
-        self.insertNewBatchComment(connection, comments)
-        changesets = []
-        comments = []
+        self.insert_new_batch(db_connection, changeset_list, is_replicate)
+        self.insert_new_batch_comment(db_connection, comment_list)
+        changeset_list = []
+        comment_list = []
         # EOF commit Large files - if isReplicate==False
-        if (isReplicate == False):
-            connection.commit()
-            self.report_progress(currentSequence, currentTimestamp)
+        if not is_replicate:
+            db_connection.commit()
+            self.report_progress(current_sequence, current_timestamp)
             self.report_bottom()
-        return currentTimestamp, changesets, comments
+        return current_timestamp, changeset_list, comment_list
 
-    def fetchReplicationFile(self, sequenceNumber):
-        sequenceNumber = str(sequenceNumber).zfill(9)
-        topdir = str(sequenceNumber)[:3]
-        subdir = str(sequenceNumber)[3:6]
-        fileNumber = str(sequenceNumber)[-3:]
-        fileUrl = BASE_REPL_URL + topdir + '/' + subdir + '/' + fileNumber + '.osm.gz'
-        replicationFile = requests.get(fileUrl, stream=True, verify=False)
-        replicationData = replicationFile.raw
-        f = gzip.GzipFile(fileobj=replicationData)
+    @staticmethod
+    def fetch_replication_file(sequence_number):
+        sequence_number = str(sequence_number).zfill(9)
+        topdir = str(sequence_number)[:3]
+        subdir = str(sequence_number)[3:6]
+        file_number = str(sequence_number)[-3:]
+        file_url = BASE_REPL_URL + topdir + '/' + subdir + '/' + file_number + '.osm.gz'
+        replication_file = requests.get(file_url, stream=True, verify=False)
+        replication_data = replication_file.raw
+        f = gzip.GzipFile(fileobj=replication_data)
         return f
 
-    def doReplication(self, connection):
+    def do_replication(self, db_connection):
         global changesets, comments
         changesets = []
         comments = []
-        currentSequence = 0
-        currentTimestamp = 0
-        cursor = connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        current_timestamp = 0
+        local_cursor = db_connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
         try:
-            cursor.execute('LOCK TABLE {0}.osm_changeset_state IN ACCESS EXCLUSIVE MODE NOWAIT'.format(self.schema, ))
-        except psycopg2.OperationalError as e:
+            local_cursor.execute(
+                'LOCK TABLE {0}.osm_changeset_state IN ACCESS EXCLUSIVE MODE NOWAIT'.format(self.schema, ))
+        except psycopg2.OperationalError:
             self.msg_report("error getting lock on state table. Another process might be running")
             return 1
-        cursor.execute('select * from {0}.osm_changeset_state'.format(self.schema, ))
-        dbStatus = cursor.fetchone()
-        lastDbSequence = dbStatus['last_sequence']
-        lastDbTimestamp = 0
-        lastServerTimestamp = 0
-        if (dbStatus['last_timestamp'] is not None):
-            lastDbTimestamp = dbStatus['last_timestamp']
-        self.msg_report("latest Timestamp in database: {0}".format(lastDbTimestamp))
-        if (dbStatus['update_in_progress'] == 1):
+        local_cursor.execute('select * from {0}.osm_changeset_state'.format(self.schema, ))
+        db_status = local_cursor.fetchone()
+        last_db_sequence = db_status['last_sequence']
+        last_db_timestamp = 0
+        if db_status['last_timestamp'] is not None:
+            last_db_timestamp = db_status['last_timestamp']
+        self.msg_report("latest Timestamp in database: {0}".format(last_db_timestamp))
+        if db_status['update_in_progress'] == 1:
             self.msg_report("concurrent update in progress. Bailing out!")
             return 1
-        if (lastDbSequence == -1):
+        if last_db_sequence == -1:
             self.msg_report("replication state not initialized. You must set the sequence number first.")
             return 1
         sql = "update {0}.osm_changeset_state set update_in_progress = 1".format(self.schema, )
-        cursor.execute(sql)
-        connection.commit()
-        self.msg_report("latest sequence from the database: {0}".format(lastDbSequence))
+        local_cursor.execute(sql)
+        db_connection.commit()
+        self.msg_report("latest sequence from the database: {0}".format(last_db_sequence))
 
         # No matter what happens after this point, execution needs to reach the update statement
         # at the end of this method to unlock the database or an error will forever leave it locked
-        returnStatus = 0
+        return_status = 0
         self.msg_report("doReplication try")
         try:
-            serverState = yaml.load(requests.get(BASE_REPL_URL + "state.yaml", verify=False).text,
-                                    Loader=yaml.FullLoader)
-            lastServerSequence = int(serverState['sequence'])
-            currentSequence = lastServerSequence
-            if (self.isLogging): logging.info("got sequence")
-            lastServerTimestamp = serverState['last_run']
-            if (self.isLogging): logging.info("last timestamp on server: " + str(lastServerTimestamp))
-        except Exception as e:
+            server_state = yaml.load(requests.get(BASE_REPL_URL + "state.yaml", verify=False).text,
+                                     Loader=yaml.FullLoader)
+            last_server_sequence = int(server_state['sequence'])
+            current_sequence = last_server_sequence
+            if self.isLogging: logging.info("got sequence")
+            last_server_timestamp = server_state['last_run']
+            if self.isLogging: logging.info("last timestamp on server: " + str(last_server_timestamp))
+        except Exception:
             self.msg_report("error retrieving server state file. Bailing on replication\n")
-            returnStatus = 2
+            return_status = 2
         else:
             try:
-                self.msg_report("latest sequence on OSM server: {0}".format(lastServerSequence))
-                self.currentTimestamp = lastServerTimestamp
-                if (lastServerSequence > lastDbSequence):
+                self.msg_report("latest sequence on OSM server: {0}".format(last_server_sequence))
+                self.currentTimestamp = last_server_timestamp
+                if last_server_sequence > last_db_sequence:
                     self.msg_report('-' * 85)
                     self.msg_report("Commencing Planet replication ({0}) to PostgreSQL Db".format(BASE_REPL_URL, ))
-                    self.msg_report("From seq={0}    {1:19} to seq={2}    {3:19}".format(lastDbSequence,
-                                                                                         lastDbTimestamp.strftime(
+                    self.msg_report("From seq={0}    {1:19} to seq={2}    {3:19}".format(last_db_sequence,
+                                                                                         last_db_timestamp.strftime(
                                                                                              '%Y-%m-%d %H:%M:%S'),
-                                                                                         lastServerSequence,
-                                                                                         lastServerTimestamp.strftime(
+                                                                                         last_server_sequence,
+                                                                                         last_server_timestamp.strftime(
                                                                                              '%Y-%m-%d %H:%M:%S')))
                     self.report_header()
                     self.msg_report("{0:^12}    {1:^8}    {2:^24}      {3:^25}".format("Last Db", "Db Insert Rate",
@@ -362,37 +362,37 @@ class ChangesetMD:
                                                                                     "(UTC)"))
                     self.msg_report('-' * 85)
                     self.msg_report(
-                        "{0:12,}    {1:>10}  {2:12}  {3:12}    {4:>25}".format(lastDbSequence, " ", " ", " ",
-                                                                               lastDbTimestamp.strftime(
+                        "{0:12,}    {1:>10}  {2:12}  {3:12}    {4:>25}".format(last_db_sequence, " ", " ", " ",
+                                                                               last_db_timestamp.strftime(
                                                                                    '%Y-%m-%d %H:%M:%S')))
-                    currentSequence = lastDbSequence + 1
+                    current_sequence = last_db_sequence + 1
                     self.BatchstartTime = datetime.now()
 
-                    pbar = tqdm.tqdm(total=lastServerSequence - currentSequence)
-                    while ((currentSequence <= lastServerSequence)):
-                        (currentTimestamp, changesets, comments) = self.parseFile(connection, currentSequence,
-                                                                                  self.fetchReplicationFile(
-                                                                                      currentSequence), True,
-                                                                                  changesets, comments)
+                    pbar = tqdm.tqdm(total=last_server_sequence - current_sequence)
+                    while current_sequence <= last_server_sequence:
+                        (current_timestamp, changesets, comments) = self.parse_file(db_connection, current_sequence,
+                                                                                    self.fetch_replication_file(
+                                                                                        current_sequence), True,
+                                                                                    changesets, comments)
                         # commit if doReplication==False or  Lines to process > bulkrows
-                        if (self.changesetsToProcess >= self.bulkrows):
-                            cursor.execute(
+                        if self.changesetsToProcess >= self.bulkrows:
+                            local_cursor.execute(
                                 "update {0}.osm_changeset_state set last_sequence={1}, last_timestamp='{2}'".format(
-                                    self.schema, currentSequence, currentTimestamp))
-                            connection.commit()
-                            self.report_progress(currentSequence, currentTimestamp)
+                                    self.schema, current_sequence, current_timestamp))
+                            db_connection.commit()
+                            self.report_progress(current_sequence, current_timestamp)
                             self.changesetsToProcess = 0
-                        currentSequence += 1
+                        current_sequence += 1
                         pbar.update(n=1)
 
                 # Process rows not yet inserted / committed
-                currentSequence -= 1
-                cursor.execute(
+                current_sequence -= 1
+                local_cursor.execute(
                     "update {0}.osm_changeset_state set last_sequence={1}, last_timestamp='{2}'".format(self.schema,
-                                                                                                        currentSequence,
-                                                                                                        currentTimestamp))
-                connection.commit()
-                self.report_progress(currentSequence, currentTimestamp)
+                                                                                                        current_sequence,
+                                                                                                        current_timestamp))
+                db_connection.commit()
+                self.report_progress(current_sequence, current_timestamp)
                 self.changesetsToProcess = 0
                 # empty arrays for Bulk changesets and comments after Db Batch Rows insert is completed
                 changesets = []
@@ -400,74 +400,74 @@ class ChangesetMD:
                 self.msg_report("finished with replication. Clearing status record")
             except Exception as e:
                 self.msg_report("error during replication")
-                self.msg_report(e)
-                returnStatus = 2
+                self.msg_report(str(e))
+                return_status = 2
 
         sql = "update {0}.osm_changeset_state set update_in_progress = 0".format(self.schema, )
-        cursor.execute(sql)
-        connection.commit()
+        local_cursor.execute(sql)
+        db_connection.commit()
         self.report_bottom()
         self.msg_report('{0} doReplication End      {0}\n'.format('=' * 35))
         # clear from memory
-        del (changesets)
-        del (comments)
-        return returnStatus
+        del changesets
+        del comments
+        return return_status
 
-    def doPartialReplication(self, connection, FromSeq, ToSeq):
+    def do_partial_replication(self, db_connection, from_seq, to_seq):
         global changesets, comments
         self.msg_report('{0} doPartialReplication New      {0}'.format('=' * 35))
-        if (FromSeq is None) or (ToSeq is None):
+        if (from_seq is None) or (to_seq is None):
             self.msg_report("both FromSeq and ToSeq must be specidied (integers > 0")
             return 1
-        if (not isinstance(FromSeq, int)) or (not isinstance(ToSeq, int)):
+        if (not isinstance(from_seq, int)) or (not isinstance(to_seq, int)):
             self.msg_report("FromSeq and ToSeq must be integers")
             return 1
-        FromSeq = int(FromSeq)
-        ToSeq = int(ToSeq)
-        if (ToSeq < FromSeq) or (FromSeq < 0):
+        from_seq = int(from_seq)
+        to_seq = int(to_seq)
+        if (to_seq < from_seq) or (from_seq < 0):
             self.msg_report("Valid values : ( 0 < FromSeq < ToSeq )")
             return 1
         changesets = []
         comments = []
-        currentSequence = 0
-        cursor = connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        lastDbSequence = FromSeq - 1
-        lastServerSequence = ToSeq
-        lastDbTimestamp = 0
-        lastServerTimestamp = 0
+        current_sequence = 0
+        current_timestamp = datetime.strptime('2004-01-01T00:00:00Z', '%Y-%m-%dT%H:%M:%SZ')
+        local_cursor = db_connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        last_db_sequence = from_seq - 1
+        last_server_sequence = to_seq
+        last_server_timestamp = 0
         self.currentTimestamp = 0
 
-        returnStatus = 0
+        return_status = 0
         self.msg_report("doPartialReplication try")
         try:
-            self.currentTimestamp = lastServerTimestamp
+            self.currentTimestamp = last_server_timestamp
             self.beginTime = datetime.now()
-            if (lastServerSequence > lastDbSequence):
+            if last_server_sequence > last_db_sequence:
                 self.msg_report('-' * 85)
                 self.msg_report("Partial replication ({0}) to PostgreSQL Db".format(BASE_REPL_URL, ))
-                self.msg_report("From seq={0}  to seq={1}".format(FromSeq, lastServerSequence))
+                self.msg_report("From seq={0}  to seq={1}".format(from_seq, last_server_sequence))
                 self.report_header()
-                self.msg_report("{0:12,}".format(FromSeq))
-                currentSequence = lastDbSequence + 1
+                self.msg_report("{0:12,}".format(from_seq))
+                current_sequence = last_db_sequence + 1
                 self.BatchstartTime = datetime.now()
-                while ((currentSequence <= lastServerSequence)):
-                    (currentTimestamp, changesets, comments) = self.parseFile(connection, currentSequence,
-                                                                              self.fetchReplicationFile(
-                                                                                  currentSequence), True, changesets,
-                                                                              comments)
+                while current_sequence <= last_server_sequence:
+                    (current_timestamp, changesets, comments) = self.parse_file(db_connection, current_sequence,
+                                                                                self.fetch_replication_file(
+                                                                                    current_sequence), True, changesets,
+                                                                                comments)
                     # commit if doReplication==False or  BulkRowsInsert > bulkrows
-                    if (self.changesetsToProcess >= self.bulkrows):
-                        cursor.execute(
+                    if self.changesetsToProcess >= self.bulkrows:
+                        local_cursor.execute(
                             "update {0}.osm_changeset_state set last_sequence={1}, last_timestamp='{2}'".format(
-                                self.schema, currentSequence, currentTimestamp))
-                        connection.commit()
-                        self.report_progress(currentSequence, currentTimestamp)
+                                self.schema, current_sequence, current_timestamp))
+                        db_connection.commit()
+                        self.report_progress(current_sequence, current_timestamp)
                         self.changesetsToProcess = 0
-                    currentSequence += 1
-            currentSequence -= 1
+                    current_sequence += 1
+            current_sequence -= 1
             # Process rows not yet inserted / committed
-            connection.commit()
-            self.report_progress(currentSequence, currentTimestamp)
+            db_connection.commit()
+            self.report_progress(current_sequence, current_timestamp)
             self.changesetsToProcess = 0
             # empty arrays for Bulk changesets and comments after Db Batch Rows insert is completed
             changesets = []
@@ -475,15 +475,15 @@ class ChangesetMD:
             self.msg_report("{0:^100}".format("finished with Partial replication as requested"))
         except Exception as e:
             self.msg_report("error during replication")
-            self.msg_report(e)
-            returnStatus = 2
+            self.msg_report(str(e))
+            return_status = 2
 
         self.report_bottom()
         self.msg_report('{0} doPartialReplication End      {0}\n'.format('=' * 35))
         # clear from memory
-        del (changesets)
-        del (comments)
-        return returnStatus
+        del changesets
+        del comments
+        return return_status
 
 
 if __name__ == '__main__':
@@ -531,12 +531,12 @@ if __name__ == '__main__':
 
     print("Db Schema", md.schema)
 
-    if (args.Logfile):
+    if args.Logfile:
         logging.info("---------- New ChangesetMD      ----------")
 
     if args.createTables:
-        md.createTables(connection)
-        if (args.doReplication):
+        md.create_tables(connection)
+        if args.doReplication:
             cursor = connection.cursor()
             md.msg_report('creating constraints')
             cursor.execute(queries.createConstraints.format(md.schema, ))
@@ -544,11 +544,11 @@ if __name__ == '__main__':
     if args.truncateTables:
         md.truncate_tables(connection)
 
-    if (args.doReplication):
-        if (args.FromSeq == None and args.ToSeq == None):
-            returnStatus = md.doReplication(connection)
+    if args.doReplication:
+        if args.FromSeq is None and args.ToSeq is None:
+            returnStatus = md.do_replication(connection)
         else:
-            returnStatus = md.doPartialReplication(connection, args.FromSeq, args.ToSeq)
+            returnStatus = md.do_partial_replication(connection, args.FromSeq, args.ToSeq)
         sys.exit(returnStatus)
 
     if not (args.fileName is None):
@@ -558,14 +558,14 @@ if __name__ == '__main__':
         else:
             md.msg_report('parsing changeset file:{0}'.format(args.fileName))
         changesetFile = None
-        if (args.doReplication):
+        if args.doReplication:
 
             changesetFile = gzip.open(args.fileName, 'rb')
         else:
-            if (args.fileName[-4:] == '.bz2'):
+            if args.fileName[-4:] == '.bz2':
 
-                if (bz2Support):
-                    if (args.bz2buffer):
+                if bz2Support:
+                    if args.bz2buffer:
                         changesetFile = BZ2File(args.fileName, 'rb', args.bz2buffer)
                         md.msg_report('bz2 file buffer : {0}'.format(args.bz2buffer))
                     else:
@@ -577,21 +577,21 @@ if __name__ == '__main__':
 
                 changesetFile = open(args.fileName, 'rb')
 
-        if (changesetFile != None):
+        if changesetFile is not None:
             changesets = []
             comments = []
             md.msg_report("ParseFile")
-            (currentTimestamp, changesets, comments) = md.parseFile(connection, 0, changesetFile, False, changesets,
-                                                                    comments)
+            (currentTimestamp, changesets, comments) = md.parse_file(connection, 0, changesetFile, False, changesets,
+                                                                     comments)
             md.msg_report("parseFile completed")
 
         else:
             md.msg_report('ERROR: no changeset file opened. Something went wrong in processing args')
-            sys.exist(1)
+            sys.exit(1)
 
     if args.createTables:
         cursor = connection.cursor()
-        if not (args.doReplication):
+        if not args.doReplication:
             md.msg_report('creating constraints')
             cursor.execute(queries.createConstraints.format(md.schema, ))
         md.msg_report('creating indexes')
@@ -605,9 +605,9 @@ if __name__ == '__main__':
     connection.close()
 
     endTime = datetime.now()
-    timeCost = endTime - beginTime
+    timeCost = (endTime - beginTime).total_seconds()
     print("-" * 85)
-    if (args.doReplication):
+    if args.doReplication:
         if timeCost > 0:
             recsSecond = md.parsedCount / timeCost
         else:

@@ -18,7 +18,7 @@ On Debian-based systems this means installing the python-psycopg2 and python-lxm
 If you are using `pip` and `virtualenv`, you can install all dependencies with `pip install -r requirements.txt`.
 
 If you want to parse the changeset file without first unzipping it, you will also need to install
-the [bz2file library](http://pypi.python.org/pypi/bz2file) since the built in bz2 library can not handle multi-stream
+the [bz2file library](http://pypi.python.org/pypi/bz2file) since the built-in bz2 library can not handle multi-stream
 bzip files.
 
 Two ```postgis``` extensions need to be [installed](http://postgis.net/install) in your PostgreSQL database:
@@ -36,7 +36,7 @@ not best practices.
 
     createuser <username>
 
-While for production, you dont want to have many versions of this huge database,  ```schema``` option let's you
+While for production, you don't want to have many versions of this huge database,  ```schema``` option lets you
 replicate subsets for analysis or tests. This ```schema``` option needs to be added to the various instructions.
 
 For the various steps below, test files (Linux SH and Windows Powershell) are provided to better document the steps and
@@ -54,7 +54,7 @@ schema speficy `-s public` below.
 The create function can be combined with the file option to immediately parse a file.
 
 To parse a dump file, use the -f | --file option. The -b |
---bulkrows «throttle» option (default value is 100000), let's specify the size of the commit (ie. simultaneous number of
+--bulkrows «throttle» option (default value is 100000), let's specify the size of the commit (i.e. simultaneous number of
 lines inserted / committed to the database). This reduces write access to the database. For computers with less memory,
 it is possible to add the -B | --bz2buffer option to control the memory read buffer size parsing the
 changesets-latest.osm.bz2 file.
@@ -75,7 +75,7 @@ Replication
 ------------
 After you have parsed a weekly dump file into the database, the database can be kept up to date using changeset diff
 files that are generated on the OpenStreetMap planet server every minute. This is also possible after you used Partial
-Replication. If you dont need all the history from 2004, you could for example start from january 1 2021 and replicate
+Replication. If you don't need all the history from 2004, you could for example start from 2021-01-01 and replicate
 from the last sequence you already processed.
 
 To initiate the replication system you will need to find out which minutely sequence number you need to start with and
@@ -100,7 +100,7 @@ directories until you find files with a similar timestamp as the one from the du
 contains 1,000 diffs so there is generally one directory per day with one day occasionally crossing two directories.
 
 Unfortunately there is no metadata file that goes along with the changeset diff files (like there is with the map data
-diff files) so there isn't a way to narrow it down to one specific file. However it is safe to apply older diffs to the
+diff files) so there isn't a way to narrow it down to one specific file. However, it is safe to apply older diffs to the
 database since it will just update the data to its current state again. So just go back 2 or 3 hours from the timestamp
 in the dump file and start there. This will ensure that any time zone setting or daylight savings time will be accounted
 for. So in the example from above, look for the file with a timestamp around November 15th at 23:00 since that is 3
@@ -125,12 +125,12 @@ few seconds to finish.
 
 Partial Replication
 ------------
-For Partial Replication, you manually control everything. In such case, the Partial Replication function dont
+For Partial Replication, you manually control everything. In such case, the Partial Replication function don't
 synchronize (read and write) with the ```osm_changeset_state``` table. It is up to you to control the Changeset
 sequences. First, you need to
 consult  [http://planet.osm.org/replication/changesets](http://planet.osm.org/replication/changesets/) to determine the
 FromSeq and ToSeq of your Partial Replication request. For example, FromSeq=4260811 and ToSeq=4262246 will extract
-changeset metadatas for January 1 2001 (utc time). These two sequences are added to the instructions to specify Partial
+changeset metadatas for 2001-01-01 (utc time). These two sequences are added to the instructions to specify Partial
 Replication.
 
     python changesetmd.py -d <database> [-s <schema>] [-b <bulkrows>]  -r -F --fromseq=4260811 --toseq=4262246
@@ -151,8 +151,7 @@ Status messages are printed every after each Batch ```bulkrow``` is inserted / c
 last sequence reported in the log since the report is printed after insert / commit of the block of lines.
 
 The log shows the Db Insert Rate (Records per second) for each ```bulkrow```. This will vary a lot based on your
-computer (laptop or server), type of disk and tuning of your PostgreSQL database. The replication log below for January
-7 2021 is from a laptop. We see that the number of sequences (files downloaded from the Planet server) and time-cost for
+computer (laptop or server), type of disk and tuning of your PostgreSQL database. The replication log below for 2021-01-07 is from a laptop. We see that the number of sequences (files downloaded from the Planet server) and time-cost for
 each bulkrow vary significatively. Comparatively, when parsing a planet/changesets-latest.osm.bz2 already saved on
 disk (no internet download and no constraint and indexes), Db Insert rate increases to around 3,000 Recs/sec.
 
@@ -182,7 +181,7 @@ Notes
 - Takes 2-3 hours to import the current dump on a decent home computer, up to 8 hours on a laptop.
 - Might be faster to process the XML into a flat file and then use the postgres COPY command to do a bulk load but this
   would make incremental updates a little harder
-- Fields indexed have commonly be queried . Depending on what you want to do, you may need more indexes.
+- Fields indexed have commonly been queried . Depending on what you want to do, you may need more indexes.
 - Changesets can be huge in extent, so you may wish to filter them by area before any visualization. 225 square km seems
   to be a fairly decent threshold to get the actual spatial footprint of edits.
   `WHERE ST_Area(ST_Transform(geom, 3410)) < 225000000` will do the trick.
@@ -202,7 +201,7 @@ Primary table of all changesets with the following columns:
 - `min_lat/max_lat/min_lon/max_lon`: description of the changeset bbox in decimal degrees
 - `user_name`: OSM username
 - `user_id`: numeric OSM user ID
-- `tags`: an hstore column holding all the tags of the changeset
+- `tags`: a jsonb column holding all the tags of the changeset
 - `geom`: [optional] a postgis geometry column of `Polygon` type (SRID: 4326)
 
 Note that all fields except for id and created\_at can be null.
