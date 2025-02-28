@@ -43,6 +43,9 @@ createConstraints = '''ALTER TABLE {0}.osm_changeset ADD CONSTRAINT {0}_osm_chan
 createIndexes = '''CREATE INDEX {0}_user_name_idx ON {0}.osm_changeset(user_name);
 CREATE INDEX {0}_user_id_idx ON {0}.osm_changeset(user_id);
 CREATE INDEX {0}_created_idx ON {0}.osm_changeset(created_at);
+'''
+
+create_tag_index = '''
 CREATE INDEX {0}_tags_idx ON {0}.osm_changeset USING GIN(tags);
 '''
 

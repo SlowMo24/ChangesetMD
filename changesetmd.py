@@ -599,6 +599,7 @@ if __name__ == '__main__':
         if args.createGeometry:
             md.msg_report('creating Geomindex')
             cursor.execute(queries.createGeomIndex.format(md.schema, ))
+        cursor.execute(queries.create_tag_index.format(md.schema, ))
         connection.commit()
 
     connection.close()
