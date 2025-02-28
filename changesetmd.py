@@ -210,6 +210,12 @@ class ChangesetMD:
             if (elem.tag != 'changeset'):
                 continue
 
+            if self.contributors and elem.attrib.get('uid') not in self.contributors:  # != '1822133':
+                elem.clear()
+                while elem.getprevious() is not None:
+                    del elem.getparent()[0]
+                continue
+
             self.parsedFileCount += 1
             self.changesetsToProcess += 1
             tags = {}
