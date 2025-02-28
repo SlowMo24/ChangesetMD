@@ -19,11 +19,14 @@ from datetime import datetime
 import psycopg2
 import psycopg2.extras
 import requests
+import tqdm
+import urllib3
 import yaml
 from lxml import etree
 
 import queries
 
+urllib3.disable_warnings()
 
 try:
     from bz2file import BZ2File
@@ -280,7 +283,7 @@ class ChangesetMD:
         subdir = str(sequenceNumber)[3:6]
         fileNumber = str(sequenceNumber)[-3:]
         fileUrl = BASE_REPL_URL + topdir + '/' + subdir + '/' + fileNumber + '.osm.gz'
-        replicationFile = requests.get(fileUrl, stream=True)
+        replicationFile = requests.get(fileUrl, stream=True, verify=False)
         replicationData = replicationFile.raw
         f = gzip.GzipFile(fileobj=replicationData)
         return f
