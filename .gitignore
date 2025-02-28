@@ -1,2 +1,8 @@
 *.pyc
 .DS_Store
+
+.idea
+
+postgres/data
+
+*.osm.bz2
