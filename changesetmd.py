@@ -152,7 +152,6 @@ class ChangesetMD:
             connection.commit()
 
     def insertNewBatch(self, connection, data_arr, isReplicate):
-        psycopg2.extras.register_hstore(connection)
         cursor = connection.cursor()
         if self.createGeometry:
             if (isReplicate):
@@ -183,7 +182,6 @@ class ChangesetMD:
         cursor.close()
 
     def insertNewBatchComment(self, connection, data_arr):
-        psycopg2.extras.register_hstore(connection)
         cursor = connection.cursor()
         sql = '''INSERT into {0}.osm_changeset_comment
                     (comment_changeset_id, comment_user_id, comment_user_name, comment_date, comment_text)

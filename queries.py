@@ -2,8 +2,8 @@
 Just a utility file to store some SQL queries for easy reference
 
 @author: Toby Murray
-createChangesetTable = '''CREATE EXTENSION IF NOT EXISTS hstore;
 """
+createChangesetTable = '''
   CREATE TABLE IF NOT EXISTS {0}.osm_changeset (
   id bigint,
   user_id bigint,
@@ -16,7 +16,7 @@ createChangesetTable = '''CREATE EXTENSION IF NOT EXISTS hstore;
   open boolean,
   num_changes integer,
   user_name varchar(255),
-  tags hstore
+  tags jsonb
 );
 CREATE TABLE IF NOT EXISTS {0}.osm_changeset_comment (
   comment_changeset_id bigint not null,
