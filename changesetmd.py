@@ -363,6 +363,7 @@ class ChangesetMD:
                     currentSequence = lastDbSequence + 1
                     self.BatchstartTime = datetime.now()
 
+                    pbar = tqdm.tqdm(total=lastServerSequence - currentSequence)
                     while ((currentSequence <= lastServerSequence)):
                         (currentTimestamp, changesets, comments) = self.parseFile(connection, currentSequence,
                                                                                   self.fetchReplicationFile(
@@ -377,6 +378,7 @@ class ChangesetMD:
                             self.report_progress(currentSequence, currentTimestamp)
                             self.changesetsToProcess = 0
                         currentSequence += 1
+                        pbar.update(n=1)
 
                 # Process rows not yet inserted / committed
                 currentSequence -= 1
