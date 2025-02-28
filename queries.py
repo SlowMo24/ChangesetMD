@@ -48,7 +48,7 @@ CREATE INDEX {0}_tags_idx ON {0}.osm_changeset USING GIN(tags);
 
 createGeometryColumn = '''
 CREATE EXTENSION IF NOT EXISTS postgis;
-ALTER TABLE {0}.osm_changeset ADD COLUMN IF NOT EXISTS geom geometry(Polygon,4326);
+ALTER TABLE {0}.osm_changeset ADD COLUMN IF NOT EXISTS geom geometry(Geometry,4326);
 '''
 
 createGeomIndex = '''

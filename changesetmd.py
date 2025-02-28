@@ -15,6 +15,7 @@ import logging
 import sys
 import time
 from datetime import datetime
+from typing import List
 
 import psycopg2
 import psycopg2.extras
@@ -157,14 +158,14 @@ class ChangesetMD:
             if (isReplicate):
                 sql = '''INSERT into {0}.osm_changeset AS t1
                     (id, user_id, created_at, min_lat, max_lat, min_lon, max_lon, closed_at, open, num_changes, user_name, tags, geom)
-                    values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,ST_SetSRID(ST_MakeEnvelope(%s,%s,%s,%s), 4326))
+                    values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,ST_MakeValid(ST_MakeEnvelope(%s,%s,%s,%s,4326)))
                     ON CONFLICT(id) DO UPDATE
                     SET created_at=excluded.created_at, min_lat=excluded.min_lat, max_lat=excluded.max_lat, min_lon=excluded.min_lon, max_lon=excluded.max_lon, closed_at=excluded.closed_at, open=excluded.open, num_changes=excluded.num_changes, user_name=excluded.user_name, tags=excluded.tags, geom=excluded.geom
                     WHERE t1.user_id=excluded.user_id'''.format(self.schema, )
             else:
                 sql = '''INSERT into {0}.osm_changeset
                     (id, user_id, created_at, min_lat, max_lat, min_lon, max_lon, closed_at, open, num_changes, user_name, tags, geom)
-                    values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,ST_SetSRID(ST_MakeEnvelope(%s,%s,%s,%s), 4326))'''.format(self.schema,)
+                    values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,ST_MakeValid(ST_MakeEnvelope(%s,%s,%s,%s,4326)))'''.format(
                     self.schema, )
         else:
             if (isReplicate):
