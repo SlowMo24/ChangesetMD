@@ -599,11 +599,12 @@ if __name__ == '__main__':
         if not args.doReplication:
             md.msg_report('creating constraints')
             cursor.execute(queries.createConstraints.format(md.schema, ))
-        md.msg_report('creating indexes')
-        cursor.execute(queries.createIndexes.format(md.schema, ))
+        md.msg_report('creating basic indexes')
+        cursor.execute(queries.create_basic_indexes.format(md.schema, ))
         if args.createGeometry:
             md.msg_report('creating Geomindex')
             cursor.execute(queries.createGeomIndex.format(md.schema, ))
+        md.msg_report('creating Tag index')
         cursor.execute(queries.create_tag_index.format(md.schema, ))
         connection.commit()
 

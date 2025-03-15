@@ -40,7 +40,7 @@ DROP INDEX IF EXISTS {0}_user_name_idx, {0}_user_id_idx, {0}_created_idx, {0}_ta
 
 createConstraints = '''ALTER TABLE {0}.osm_changeset ADD CONSTRAINT {0}_osm_changeset_pkey PRIMARY KEY(id);'''
 
-createIndexes = '''CREATE INDEX {0}_user_name_idx ON {0}.osm_changeset(user_name);
+create_basic_indexes = '''CREATE INDEX {0}_user_name_idx ON {0}.osm_changeset(user_name);
 CREATE INDEX {0}_user_id_idx ON {0}.osm_changeset(user_id);
 CREATE INDEX {0}_created_idx ON {0}.osm_changeset(created_at);
 '''
